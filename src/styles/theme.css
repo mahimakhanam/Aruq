@@ -1,0 +1,55 @@
+@theme {
+  --color-pal-red: #CE1126;
+  --color-pal-green: #007A3D;
+  --color-pal-black: #000000;
+  --color-pal-white: #FFFFFF;
+  --color-earth-sand: #E6D5B8;
+  --color-earth-olive: #556B2F;
+  --color-earth-terracotta: #A0522D;
+  --color-earth-clay: #B45F04;
+  --color-earth-stone: #2F2F2F;
+  --font-arabic: 'Scheherazade New', serif;
+  --font-amiri: 'Amiri', serif;
+  --font-sans: 'Inter', sans-serif;
+}
+
+/* Custom Utilities */
+.font-arabic {
+  font-family: var(--font-arabic);
+}
+
+.font-amiri {
+  font-family: var(--font-amiri);
+}
+
+/* Tatreez Pattern Utility - A simple geometric cross-stitch simulation */
+.bg-tatreez-red {
+  background-color: var(--color-pal-red);
+  background-image: 
+    linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.2) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.2) 75%);
+  background-size: 10px 10px;
+}
+
+.bg-tatreez-black {
+  background-color: var(--color-pal-black);
+  background-image: 
+    radial-gradient(var(--color-pal-white) 15%, transparent 16%),
+    radial-gradient(var(--color-pal-white) 15%, transparent 16%);
+  background-size: 10px 10px;
+  background-position: 0 0, 5px 5px;
+  opacity: 0.8;
+}
+
+/* Keffiyeh Pattern Utility - Simplified fishnet */
+.bg-keffiyeh {
+  background-color: #f8f8f8;
+  background-image: 
+    linear-gradient(0deg, transparent 24%, rgba(0, 0, 0, .1) 25%, rgba(0, 0, 0, .1) 26%, transparent 27%, transparent 74%, rgba(0, 0, 0, .1) 75%, rgba(0, 0, 0, .1) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(0, 0, 0, .1) 25%, rgba(0, 0, 0, .1) 26%, transparent 27%, transparent 74%, rgba(0, 0, 0, .1) 75%, rgba(0, 0, 0, .1) 76%, transparent 77%, transparent);
+  background-size: 30px 30px;
+}
+
+.text-shadow-sm {
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
