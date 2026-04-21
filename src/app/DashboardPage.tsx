@@ -387,9 +387,8 @@ const DashboardPage = () => {
 
     try {
       setBackendError('');
-      setIsSubmitting(true); // Assuming you add this to UI state or just use local loading
 
-      // --- 1. SEND TO AI MODERATION (RENDER) FIRST ---
+      // --- 1. SEND TO AI MODERATION (RENDER) ---
       const aiResponse = await fetch("https://aruq-backend.onrender.com/moderate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -397,15 +396,13 @@ const DashboardPage = () => {
       });
 
       const aiData = await aiResponse.json();
-      console.log("AI Backend response:", aiData);
 
-      // --- 2. LOGIC GATE: If AI says no, stop here! ---
-      // Adjust 'status' based on what your actual API returns
+      // --- 2. LOGIC GATE ---
       if (aiData.status === "flagged") {
         throw new Error("Content flagged by AI moderation. Please edit your submission.");
       }
 
-      // --- 3. SAVE TO FIREBASE (Only if AI check passes) ---
+      // --- 3. SAVE TO FIREBASE ---
       const createdAtMillis = Date.now();
 
       const firestoreSubmission = {
@@ -421,7 +418,7 @@ const DashboardPage = () => {
         authorId: auth.currentUser?.uid || '',
         isPublished: false,
         verificationStage: 'AI Auto-Check',
-        aiCheckResult: 'Approved', // You can save the result here!
+        aiCheckResult: 'Approved',
         heritageReviewNote: '',
         createdAtMillis,
         createdAt: serverTimestamp(),
@@ -447,10 +444,8 @@ const DashboardPage = () => {
       setSuccessMessage('Submission saved successfully. It passed the AI check!');
 
     } catch (error: any) {
-      // If AI fails or Firebase fails, this catch block handles it
-      setBackendError(error.message || "Something went wrong during submission.");
-    } finally {
-      setIsSubmitting(false);
+      // This catches AI rejection errors or Firebase errors
+      setBackendError(error.message || getReadableBackendError(error));
     }
   };
 
@@ -932,8 +927,8 @@ const UploadModal = ({
         fileName: file.name,
         fileSize: formatFileSize(file.size),
       });
-    } catch (uploadError) {
-      setError(getReadableBackendError(uploadError));
+    } catch (uploadError: any) {
+      setError(uploadError.message || getReadableBackendError(uploadError));
     } finally {
       setIsSubmitting(false);
     }
