@@ -64,6 +64,7 @@ type NewSubmissionInput = {
   description: string;
   fileName: string;
   fileSize: string;
+  file: File;
 };
 
 const CURRENT_USER_KEY = 'aruqCurrentUser';
@@ -380,74 +381,107 @@ const DashboardPage = () => {
   };
 
   const handleAddSubmission = async (newSubmission: NewSubmissionInput) => {
-    if (!currentUser) {
-      setBackendError('You must be logged in before uploading a submission.');
-      return;
+  if (!currentUser) {
+    setBackendError('You must be logged in before uploading a submission.');
+    return;
+  }
+
+  try {
+    setBackendError('');
+
+    // 1. Moderate description text
+    const textResponse = await fetch('https://aruq-backend.onrender.com/moderate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: newSubmission.description }),
+    });
+
+    const textData = await textResponse.json();
+
+    if (!textResponse.ok) {
+      throw new Error(textData.reason || 'Text moderation failed.');
     }
 
-    try {
-      setBackendError('');
+    if (textData.status === 'flagged') {
+      throw new Error(textData.reason || 'Description flagged by AI moderation.');
+    }
 
-      // --- 1. SEND TO AI MODERATION (RENDER) ---
-      const aiResponse = await fetch("https://aruq-backend.onrender.com/moderate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: newSubmission.description }),
-      });
+    if (textData.status === 'error') {
+      throw new Error(textData.reason || 'Text moderation service error.');
+    }
 
-      const aiData = await aiResponse.json();
+    // 2. Moderate PDF file only if uploaded file is a PDF
+    const extension = newSubmission.file.name.split('.').pop()?.toLowerCase();
 
-      // --- 2. LOGIC GATE ---
-      if (aiData.status === "flagged") {
-        throw new Error("Content flagged by AI moderation. Please edit your submission.");
-      }
+    if (extension === 'pdf') {
+      const formData = new FormData();
+      formData.append('file', newSubmission.file);
 
-      // --- 3. SAVE TO FIREBASE ---
-      const createdAtMillis = Date.now();
-
-      const firestoreSubmission = {
-        title: newSubmission.title,
-        type: newSubmission.type,
-        category: newSubmission.category,
-        description: newSubmission.description,
-        fileName: newSubmission.fileName,
-        fileSize: newSubmission.fileSize,
-        dateSubmitted: getTodayDate(),
-        status: 'AI Auto-Check' as SubmissionStatus,
-        authorEmail: currentUser.email,
-        authorId: auth.currentUser?.uid || '',
-        isPublished: false,
-        verificationStage: 'AI Auto-Check',
-        aiCheckResult: 'Approved',
-        heritageReviewNote: '',
-        createdAtMillis,
-        createdAt: serverTimestamp(),
-      };
-
-      const docRef = await addDoc(
-          collection(db, 'submissions'),
-          firestoreSubmission
+      const docResponse = await fetch(
+        'https://aruq-backend.onrender.com/moderate-document',
+        {
+          method: 'POST',
+          body: formData,
+        }
       );
 
-      const savedSubmission: Submission = {
-        id: docRef.id,
-        ...firestoreSubmission,
-        source: 'Firestore',
-      };
+      const docData = await docResponse.json();
 
-      setSubmissions((previousSubmissions) => [
-        savedSubmission,
-        ...previousSubmissions,
-      ]);
+      if (!docResponse.ok) {
+        throw new Error(docData.reason || 'Document moderation failed.');
+      }
 
-      setIsUploadOpen(false);
-      setSuccessMessage('Submission saved successfully. It passed the AI check!');
+      if (docData.status === 'flagged') {
+        throw new Error(docData.reason || 'PDF content flagged by AI moderation.');
+      }
 
-    } catch (error: any) {
-      // This catches AI rejection errors or Firebase errors
-      setBackendError(error.message || getReadableBackendError(error));
+      if (docData.status === 'error') {
+        throw new Error(docData.reason || 'Document moderation service error.');
+      }
     }
-  };
+
+    // 3. Save metadata to Firestore only after moderation passes
+    const createdAtMillis = Date.now();
+
+    const firestoreSubmission = {
+      title: newSubmission.title,
+      type: newSubmission.type,
+      category: newSubmission.category,
+      description: newSubmission.description,
+      fileName: newSubmission.fileName,
+      fileSize: newSubmission.fileSize,
+      dateSubmitted: getTodayDate(),
+      status: 'AI Auto-Check' as SubmissionStatus,
+      authorEmail: currentUser.email,
+      authorId: auth.currentUser?.uid || '',
+      isPublished: false,
+      verificationStage: 'AI Auto-Check',
+      aiCheckResult: 'Approved',
+      heritageReviewNote: '',
+      createdAtMillis,
+      createdAt: serverTimestamp(),
+    };
+
+    const docRef = await addDoc(collection(db, 'submissions'), firestoreSubmission);
+
+    const savedSubmission: Submission = {
+      id: docRef.id,
+      ...firestoreSubmission,
+      source: 'Firestore',
+    };
+
+    setSubmissions((previousSubmissions) => [
+      savedSubmission,
+      ...previousSubmissions,
+    ]);
+
+    setIsUploadOpen(false);
+    setSuccessMessage('Submission saved successfully. It passed moderation.');
+  } catch (error: any) {
+    setBackendError(error.message || getReadableBackendError(error));
+    throw error;
+  }
+};
 
   if (!currentUser) {
     return (
@@ -926,6 +960,7 @@ const UploadModal = ({
         description: description.trim(),
         fileName: file.name,
         fileSize: formatFileSize(file.size),
+        file,
       });
     } catch (uploadError: any) {
       setError(uploadError.message || getReadableBackendError(uploadError));
