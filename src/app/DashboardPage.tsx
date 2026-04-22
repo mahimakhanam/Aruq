@@ -21,9 +21,11 @@ import { signOut } from 'firebase/auth';
 import {
   addDoc,
   collection,
+  doc,
   getDocs,
   query,
   serverTimestamp,
+  updateDoc,
   where,
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
@@ -37,6 +39,8 @@ type CurrentUser = {
 
 type SubmissionStatus =
     | 'AI Auto-Check'
+    | 'AI Approved'
+    | 'Flagged'
     | 'Heritage Check'
     | 'Published'
     | 'Needs Revision';
@@ -107,7 +111,13 @@ const getTodayDate = () => {
 
 const getWorkflowStep = (status?: SubmissionStatus) => {
   if (!status) return 0;
-  if (status === 'AI Auto-Check') return 2;
+  if (
+    status === 'AI Auto-Check' ||
+    status === 'AI Approved' ||
+    status === 'Flagged'
+  ) {
+    return 2;
+  }
   if (status === 'Heritage Check' || status === 'Needs Revision') return 3;
   if (status === 'Published') return 4;
   return 1;
@@ -115,7 +125,15 @@ const getWorkflowStep = (status?: SubmissionStatus) => {
 
 const getStatusDescription = (status: SubmissionStatus) => {
   if (status === 'AI Auto-Check') {
-    return 'The submitted file details have been saved and are waiting for automated prototype checking.';
+    return 'The item has been uploaded and is waiting for automated review.';
+  }
+
+  if (status === 'AI Approved') {
+    return 'The item passed automated review and is ready for the next verification stage.';
+  }
+
+  if (status === 'Flagged') {
+    return 'The item was flagged during automated review and needs attention before continuing.';
   }
 
   if (status === 'Heritage Check') {
@@ -281,18 +299,22 @@ const Step = ({
 
 const StatusBadge = ({ status }: { status: SubmissionStatus }) => {
   const style =
-      status === 'Published'
-          ? 'bg-green-100 text-green-700 border-green-200'
-          : status === 'Needs Revision'
-              ? 'bg-red-100 text-red-700 border-red-200'
-              : status === 'Heritage Check'
-                  ? 'bg-blue-100 text-blue-700 border-blue-200'
-                  : 'bg-orange-100 text-orange-700 border-orange-200';
+    status === 'Published'
+      ? 'bg-green-100 text-green-700 border-green-200'
+      : status === 'Flagged'
+      ? 'bg-red-100 text-red-700 border-red-200'
+      : status === 'Needs Revision'
+      ? 'bg-red-100 text-red-700 border-red-200'
+      : status === 'Heritage Check'
+      ? 'bg-blue-100 text-blue-700 border-blue-200'
+      : status === 'AI Approved'
+      ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+      : 'bg-orange-100 text-orange-700 border-orange-200';
 
   return (
-      <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${style}`}
-      >
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${style}`}
+    >
       {status}
     </span>
   );
@@ -389,60 +411,9 @@ const DashboardPage = () => {
   try {
     setBackendError('');
 
-    // 1. Moderate description text
-    const textResponse = await fetch('https://aruq-backend.onrender.com/moderate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: newSubmission.description }),
-    });
-
-    const textData = await textResponse.json();
-
-    if (!textResponse.ok) {
-      throw new Error(textData.reason || 'Text moderation failed.');
-    }
-
-    if (textData.status === 'flagged') {
-      throw new Error(textData.reason || 'Description flagged by AI moderation.');
-    }
-
-    if (textData.status === 'error') {
-      throw new Error(textData.reason || 'Text moderation service error.');
-    }
-
-    // 2. Moderate PDF file only if uploaded file is a PDF
-    const extension = newSubmission.file.name.split('.').pop()?.toLowerCase();
-
-    if (extension === 'pdf') {
-      const formData = new FormData();
-      formData.append('file', newSubmission.file);
-
-      const docResponse = await fetch(
-        'https://aruq-backend.onrender.com/moderate-document',
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
-
-      const docData = await docResponse.json();
-
-      if (!docResponse.ok) {
-        throw new Error(docData.reason || 'Document moderation failed.');
-      }
-
-      if (docData.status === 'flagged') {
-        throw new Error(docData.reason || 'PDF content flagged by AI moderation.');
-      }
-
-      if (docData.status === 'error') {
-        throw new Error(docData.reason || 'Document moderation service error.');
-      }
-    }
-
-    // 3. Save metadata to Firestore only after moderation passes
     const createdAtMillis = Date.now();
 
+    // 1. Save immediately as AI Auto-Check
     const firestoreSubmission = {
       title: newSubmission.title,
       type: newSubmission.type,
@@ -456,7 +427,7 @@ const DashboardPage = () => {
       authorId: auth.currentUser?.uid || '',
       isPublished: false,
       verificationStage: 'AI Auto-Check',
-      aiCheckResult: 'Approved',
+      aiCheckResult: 'Pending',
       heritageReviewNote: '',
       createdAtMillis,
       createdAt: serverTimestamp(),
@@ -475,8 +446,89 @@ const DashboardPage = () => {
       ...previousSubmissions,
     ]);
 
+    // 2. Run text moderation
+    const textResponse = await fetch('https://aruq-backend.onrender.com/moderate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: newSubmission.description }),
+    });
+
+    const textData = await textResponse.json();
+
+    if (!textResponse.ok || textData.status === 'error') {
+      throw new Error(textData.reason || 'Text moderation failed.');
+    }
+
+    // 3. Run PDF moderation only for PDFs
+    let finalStatus: SubmissionStatus = 'AI Approved';
+    let aiCheckResult = 'Approved';
+    let moderationReason = '';
+
+    if (textData.status === 'flagged') {
+      finalStatus = 'Flagged';
+      aiCheckResult = 'Flagged';
+      moderationReason = textData.reason || 'Description flagged by AI moderation.';
+    } else {
+      const extension = newSubmission.file.name.split('.').pop()?.toLowerCase();
+
+      if (extension === 'pdf') {
+        const formData = new FormData();
+        formData.append('file', newSubmission.file);
+
+        const docResponse = await fetch(
+          'https://aruq-backend.onrender.com/moderate-document',
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+
+        const docData = await docResponse.json();
+
+        if (!docResponse.ok || docData.status === 'error') {
+          throw new Error(docData.reason || 'Document moderation failed.');
+        }
+
+        if (docData.status === 'flagged') {
+          finalStatus = 'Flagged';
+          aiCheckResult = 'Flagged';
+          moderationReason = docData.reason || 'PDF content flagged by AI moderation.';
+        }
+      }
+    }
+
+    // 4. Update Firestore with AI result
+    await updateDoc(doc(db, 'submissions', docRef.id), {
+      status: finalStatus,
+      verificationStage: finalStatus,
+      aiCheckResult,
+      heritageReviewNote: moderationReason,
+    });
+
+    // 5. Update local UI state
+    setSubmissions((previousSubmissions) =>
+      previousSubmissions.map((item) =>
+        item.id === docRef.id
+          ? {
+              ...item,
+              status: finalStatus,
+            }
+          : item
+      )
+    );
+
     setIsUploadOpen(false);
-    setSuccessMessage('Submission saved successfully. It passed moderation.');
+
+    if (finalStatus === 'Flagged') {
+      setBackendError(
+        moderationReason || 'Submission was flagged during AI moderation.'
+      );
+      setSuccessMessage('Submission was uploaded, but it was flagged by AI review.');
+    } else {
+      setSuccessMessage(
+        'Submission uploaded successfully and approved by AI moderation.'
+      );
+    }
   } catch (error: any) {
     setBackendError(error.message || getReadableBackendError(error));
     throw error;
