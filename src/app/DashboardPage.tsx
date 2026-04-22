@@ -308,7 +308,7 @@ const StatusBadge = ({ status }: { status: SubmissionStatus }) => {
       : status === 'Heritage Check'
       ? 'bg-blue-100 text-blue-700 border-blue-200'
       : status === 'AI Approved'
-      ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+      ? 'bg-blue-100 text-blue-700 border-blue-200'
       : 'bg-orange-100 text-orange-700 border-orange-200';
 
   return (
@@ -508,11 +508,14 @@ const DashboardPage = () => {
       setIsUploadOpen(false);
 
       if (finalStatus === 'Flagged') {
+        setSuccessMessage('');
         setBackendError(
-          moderationReason || 'Submission was flagged during AI moderation.'
+          moderationReason
+            ? `Submission was flagged during AI moderation: ${moderationReason}`
+            : 'Submission was flagged during AI moderation.'
         );
-        setSuccessMessage('Submission was uploaded, but it was flagged by AI review.');
       } else {
+        setBackendError('');
         setSuccessMessage(
           'Submission uploaded successfully and approved by AI moderation.'
         );
@@ -680,7 +683,7 @@ const DashboardPage = () => {
                 <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
 
                 <div className="flex-1">
-                  <p className="font-bold">Backend Error</p>
+                  <p className="font-bold">Submission Flagged</p>
 
                   <p className="text-sm mt-1">{backendError}</p>
                 </div>
