@@ -38,12 +38,12 @@ type CurrentUser = {
 };
 
 type SubmissionStatus =
-    | 'AI Auto-Check'
-    | 'AI Approved'
-    | 'Flagged'
-    | 'Heritage Check'
-    | 'Published'
-    | 'Needs Revision';
+  | 'AI Auto-Check'
+  | 'AI Approved'
+  | 'Flagged'
+  | 'Heritage Check'
+  | 'Published'
+  | 'Needs Revision';
 
 type Submission = {
   id: string;
@@ -171,8 +171,8 @@ const getReadableBackendError = (error: unknown) => {
 };
 
 const convertFirestoreDocToSubmission = (
-    documentId: string,
-    data: any
+  documentId: string,
+  data: any
 ): Submission => {
   return {
     id: documentId,
@@ -192,13 +192,13 @@ const convertFirestoreDocToSubmission = (
 };
 
 const NavItem = ({
-                   icon,
-                   label,
-                   active,
-                   badge,
-                   danger,
-                   onClick,
-                 }: {
+  icon,
+  label,
+  active,
+  badge,
+  danger,
+  onClick,
+}: {
   icon: React.ReactNode;
   label: string;
   active?: boolean;
@@ -206,95 +206,95 @@ const NavItem = ({
   danger?: boolean;
   onClick?: () => void;
 }) => (
-    <button
-        type="button"
-        onClick={onClick}
-        className={`flex items-center justify-between px-6 py-4 border-l-4 transition-colors text-left w-full ${
-            active
-                ? 'bg-stone-50 border-pal-red text-pal-red font-medium'
-                : 'border-transparent text-stone-600 hover:bg-stone-50 hover:text-stone-900'
-        } ${danger ? 'text-red-500 hover:bg-red-50 hover:text-red-600' : ''}`}
-    >
-      <div className="flex items-center gap-3">
-        {icon}
-        <span>{label}</span>
-      </div>
+  <button
+    type="button"
+    onClick={onClick}
+    className={`flex items-center justify-between px-6 py-4 border-l-4 transition-colors text-left w-full ${
+      active
+        ? 'bg-stone-50 border-pal-red text-pal-red font-medium'
+        : 'border-transparent text-stone-600 hover:bg-stone-50 hover:text-stone-900'
+    } ${danger ? 'text-red-500 hover:bg-red-50 hover:text-red-600' : ''}`}
+  >
+    <div className="flex items-center gap-3">
+      {icon}
+      <span>{label}</span>
+    </div>
 
-      {badge && (
-          <span className="bg-pal-red text-white text-xs font-bold px-2 py-0.5 rounded-full">
+    {badge && (
+      <span className="bg-pal-red text-white text-xs font-bold px-2 py-0.5 rounded-full">
         {badge}
       </span>
-      )}
-    </button>
+    )}
+  </button>
 );
 
 const StatCard = ({
-                    label,
-                    value,
-                    icon,
-                    color,
-                  }: {
+  label,
+  value,
+  icon,
+  color,
+}: {
   label: string;
   value: number;
   icon: React.ReactNode;
   color: string;
 }) => (
-    <div className="bg-white p-5 rounded-xl shadow-sm border border-stone-100 hover:shadow-md transition-all hover:border-stone-200 h-full min-w-0">
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <p className="text-3xl font-bold text-stone-900 leading-none">
-            {value}
-          </p>
+  <div className="bg-white p-5 rounded-xl shadow-sm border border-stone-100 hover:shadow-md transition-all hover:border-stone-200 h-full min-w-0">
+    <div className="flex items-center justify-between gap-4">
+      <div className="min-w-0 flex-1">
+        <p className="text-3xl font-bold text-stone-900 leading-none">
+          {value}
+        </p>
 
-          <p className="text-xs text-stone-600 uppercase tracking-wide font-medium leading-tight mt-4">
-            {label}
-          </p>
-        </div>
+        <p className="text-xs text-stone-600 uppercase tracking-wide font-medium leading-tight mt-4">
+          {label}
+        </p>
+      </div>
 
-        <div
-            className={`w-14 h-14 rounded-lg ${color} flex items-center justify-center shrink-0`}
-        >
-          {icon}
-        </div>
+      <div
+        className={`w-14 h-14 rounded-lg ${color} flex items-center justify-center shrink-0`}
+      >
+        {icon}
       </div>
     </div>
+  </div>
 );
 
 const Step = ({
-                number,
-                title,
-                active,
-                current,
-              }: {
+  number,
+  title,
+  active,
+  current,
+}: {
   number: string;
   title: string;
   active?: boolean;
   current?: boolean;
 }) => (
+  <div
+    className={`relative z-10 flex flex-col items-center gap-2 text-center ${
+      active || current ? 'opacity-100' : 'opacity-40'
+    }`}
+  >
     <div
-        className={`relative z-10 flex flex-col items-center gap-2 text-center ${
-            active || current ? 'opacity-100' : 'opacity-40'
-        }`}
-    >
-      <div
-          className={`
+      className={`
         w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 transition-colors
         ${current ? 'bg-white border-pal-red text-pal-red' : ''}
         ${active && !current ? 'bg-pal-red border-pal-red text-white' : ''}
         ${!active && !current ? 'bg-stone-200 border-stone-200 text-stone-500' : ''}
       `}
-      >
-        {active && !current ? <CheckCircle className="w-5 h-5" /> : number}
-      </div>
+    >
+      {active && !current ? <CheckCircle className="w-5 h-5" /> : number}
+    </div>
 
-      <span
-          className={`text-xs font-bold ${
-              current ? 'text-pal-red' : 'text-stone-500'
-          }`}
-      >
+    <span
+      className={`text-xs font-bold ${
+        current ? 'text-pal-red' : 'text-stone-500'
+      }`}
+    >
       {title}
     </span>
-    </div>
+  </div>
 );
 
 const StatusBadge = ({ status }: { status: SubmissionStatus }) => {
@@ -326,7 +326,7 @@ const DashboardPage = () => {
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] =
-      useState<Submission | null>(null);
+    useState<Submission | null>(null);
 
   const [successMessage, setSuccessMessage] = useState('');
   const [backendError, setBackendError] = useState('');
@@ -347,17 +347,17 @@ const DashboardPage = () => {
 
       const submissionsRef = collection(db, 'submissions');
       const submissionsQuery = query(
-          submissionsRef,
-          where('authorEmail', '==', currentUser.email)
+        submissionsRef,
+        where('authorEmail', '==', currentUser.email)
       );
 
       const querySnapshot = await getDocs(submissionsQuery);
 
       const loadedSubmissions = querySnapshot.docs
-          .map((document) =>
-              convertFirestoreDocToSubmission(document.id, document.data())
-          )
-          .sort((a, b) => (b.createdAtMillis || 0) - (a.createdAtMillis || 0));
+        .map((document) =>
+          convertFirestoreDocToSubmission(document.id, document.data())
+        )
+        .sort((a, b) => (b.createdAtMillis || 0) - (a.createdAtMillis || 0));
 
       setSubmissions(loadedSubmissions);
     } catch (error) {
@@ -377,15 +377,15 @@ const DashboardPage = () => {
   }, [submissions, currentUser]);
 
   const publishedCount = userSubmissions.filter(
-      (item) => item.status === 'Published'
+    (item) => item.status === 'Published'
   ).length;
 
   const pendingCount = userSubmissions.filter(
-      (item) => item.status !== 'Published'
+    (item) => item.status !== 'Published'
   ).length;
 
   const revisionCount = userSubmissions.filter(
-      (item) => item.status === 'Needs Revision'
+    (item) => item.status === 'Needs Revision'
   ).length;
 
   const latestSubmission = userSubmissions[0];
@@ -403,572 +403,556 @@ const DashboardPage = () => {
   };
 
   const handleAddSubmission = async (newSubmission: NewSubmissionInput) => {
-  if (!currentUser) {
-    setBackendError('You must be logged in before uploading a submission.');
-    return;
-  }
-
-  try {
-    setBackendError('');
-
-    const createdAtMillis = Date.now();
-
-    // 1. Save immediately as AI Auto-Check
-    const firestoreSubmission = {
-      title: newSubmission.title,
-      type: newSubmission.type,
-      category: newSubmission.category,
-      description: newSubmission.description,
-      fileName: newSubmission.fileName,
-      fileSize: newSubmission.fileSize,
-      dateSubmitted: getTodayDate(),
-      status: 'AI Auto-Check' as SubmissionStatus,
-      authorEmail: currentUser.email,
-      authorId: auth.currentUser?.uid || '',
-      isPublished: false,
-      verificationStage: 'AI Auto-Check',
-      aiCheckResult: 'Pending',
-      heritageReviewNote: '',
-      createdAtMillis,
-      createdAt: serverTimestamp(),
-    };
-
-    const docRef = await addDoc(collection(db, 'submissions'), firestoreSubmission);
-
-    const savedSubmission: Submission = {
-      id: docRef.id,
-      ...firestoreSubmission,
-      source: 'Firestore',
-    };
-
-    setSubmissions((previousSubmissions) => [
-      savedSubmission,
-      ...previousSubmissions,
-    ]);
-
-    // 2. Run text moderation
-    const textResponse = await fetch('https://aruq-backend.onrender.com/moderate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: newSubmission.description }),
-    });
-
-    const textData = await textResponse.json();
-
-    if (!textResponse.ok || textData.status === 'error') {
-      throw new Error(textData.reason || 'Text moderation failed.');
+    if (!currentUser) {
+      setBackendError('You must be logged in before uploading a submission.');
+      return;
     }
 
-    // 3. Run PDF moderation only for PDFs
-    let finalStatus: SubmissionStatus = 'AI Approved';
-    let aiCheckResult = 'Approved';
-    let moderationReason = '';
+    try {
+      setBackendError('');
 
-    if (textData.status === 'flagged') {
-      finalStatus = 'Flagged';
-      aiCheckResult = 'Flagged';
-      moderationReason = textData.reason || 'Description flagged by AI moderation.';
-    } else {
-      const extension = newSubmission.file.name.split('.').pop()?.toLowerCase();
+      const createdAtMillis = Date.now();
 
-      if (extension === 'pdf') {
-        const formData = new FormData();
-        formData.append('file', newSubmission.file);
+      const firestoreSubmission = {
+        title: newSubmission.title,
+        type: newSubmission.type,
+        category: newSubmission.category,
+        description: newSubmission.description,
+        fileName: newSubmission.fileName,
+        fileSize: newSubmission.fileSize,
+        dateSubmitted: getTodayDate(),
+        status: 'AI Auto-Check' as SubmissionStatus,
+        authorEmail: currentUser.email,
+        authorId: auth.currentUser?.uid || '',
+        isPublished: false,
+        verificationStage: 'AI Auto-Check',
+        aiCheckResult: 'Pending',
+        heritageReviewNote: '',
+        createdAtMillis,
+        createdAt: serverTimestamp(),
+      };
 
-        const docResponse = await fetch(
-          'https://aruq-backend.onrender.com/moderate-document',
-          {
-            method: 'POST',
-            body: formData,
+      const docRef = await addDoc(collection(db, 'submissions'), firestoreSubmission);
+
+      const savedSubmission: Submission = {
+        id: docRef.id,
+        ...firestoreSubmission,
+        source: 'Firestore',
+      };
+
+      setSubmissions((previousSubmissions) => [
+        savedSubmission,
+        ...previousSubmissions,
+      ]);
+
+      const textResponse = await fetch('https://aruq-backend.onrender.com/moderate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: newSubmission.description }),
+      });
+
+      const textData = await textResponse.json();
+
+      if (!textResponse.ok || textData.status === 'error') {
+        throw new Error(textData.reason || 'Text moderation failed.');
+      }
+
+      let finalStatus: SubmissionStatus = 'AI Approved';
+      let aiCheckResult = 'Approved';
+      let moderationReason = '';
+
+      if (textData.status === 'flagged') {
+        finalStatus = 'Flagged';
+        aiCheckResult = 'Flagged';
+        moderationReason =
+          textData.reason || 'Description flagged by AI moderation.';
+      } else {
+        const extension = newSubmission.file.name.split('.').pop()?.toLowerCase();
+
+        if (extension === 'pdf') {
+          const formData = new FormData();
+          formData.append('file', newSubmission.file);
+
+          const docResponse = await fetch(
+            'https://aruq-backend.onrender.com/moderate-document',
+            {
+              method: 'POST',
+              body: formData,
+            }
+          );
+
+          const docData = await docResponse.json();
+
+          if (!docResponse.ok || docData.status === 'error') {
+            throw new Error(docData.reason || 'Document moderation failed.');
           }
-        );
 
-        const docData = await docResponse.json();
-
-        if (!docResponse.ok || docData.status === 'error') {
-          throw new Error(docData.reason || 'Document moderation failed.');
-        }
-
-        if (docData.status === 'flagged') {
-          finalStatus = 'Flagged';
-          aiCheckResult = 'Flagged';
-          moderationReason = docData.reason || 'PDF content flagged by AI moderation.';
+          if (docData.status === 'flagged') {
+            finalStatus = 'Flagged';
+            aiCheckResult = 'Flagged';
+            moderationReason =
+              docData.reason || 'PDF content flagged by AI moderation.';
+          }
         }
       }
+
+      await updateDoc(doc(db, 'submissions', docRef.id), {
+        status: finalStatus,
+        verificationStage: 'AI Auto-Check',
+        aiCheckResult,
+        heritageReviewNote: moderationReason,
+      });
+
+      await loadSubmissionsFromFirestore();
+
+      setIsUploadOpen(false);
+
+      if (finalStatus === 'Flagged') {
+        setBackendError(
+          moderationReason || 'Submission was flagged during AI moderation.'
+        );
+        setSuccessMessage('Submission was uploaded, but it was flagged by AI review.');
+      } else {
+        setSuccessMessage(
+          'Submission uploaded successfully and approved by AI moderation.'
+        );
+      }
+    } catch (error: any) {
+      setBackendError(error.message || getReadableBackendError(error));
+      throw error;
     }
-
-    // 4. Update Firestore with AI result
-    await updateDoc(doc(db, 'submissions', docRef.id), {
-      status: finalStatus,
-      verificationStage: finalStatus,
-      aiCheckResult,
-      heritageReviewNote: moderationReason,
-    });
-
-    // 5. Update local UI state
-    setSubmissions((previousSubmissions) =>
-      previousSubmissions.map((item) =>
-        item.id === docRef.id
-          ? {
-              ...item,
-              status: finalStatus,
-            }
-          : item
-      )
-    );
-
-    setIsUploadOpen(false);
-
-    if (finalStatus === 'Flagged') {
-      setBackendError(
-        moderationReason || 'Submission was flagged during AI moderation.'
-      );
-      setSuccessMessage('Submission was uploaded, but it was flagged by AI review.');
-    } else {
-      setSuccessMessage(
-        'Submission uploaded successfully and approved by AI moderation.'
-      );
-    }
-  } catch (error: any) {
-    setBackendError(error.message || getReadableBackendError(error));
-    throw error;
-  }
-};
+  };
 
   if (!currentUser) {
     return (
-        <Layout>
-          <div className="bg-stone-50 min-h-screen flex items-center justify-center px-4">
-            <div className="bg-white max-w-md w-full rounded-2xl shadow-xl border border-stone-100 p-8 text-center">
-              <AlertCircle className="w-12 h-12 text-pal-red mx-auto mb-4" />
+      <Layout>
+        <div className="bg-stone-50 min-h-screen flex items-center justify-center px-4">
+          <div className="bg-white max-w-md w-full rounded-2xl shadow-xl border border-stone-100 p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-pal-red mx-auto mb-4" />
 
-              <h1 className="text-2xl font-bold text-stone-800 mb-2">
-                Please log in first
-              </h1>
+            <h1 className="text-2xl font-bold text-stone-800 mb-2">
+              Please log in first
+            </h1>
 
-              <p className="text-stone-500 mb-6">
-                You need to sign in before accessing the contributor dashboard.
-              </p>
+            <p className="text-stone-500 mb-6">
+              You need to sign in before accessing the contributor dashboard.
+            </p>
 
-              <Link
-                  to="/auth"
-                  className="inline-flex bg-pal-red hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
-              >
-                Go to Login
-              </Link>
-            </div>
+            <Link
+              to="/auth"
+              className="inline-flex bg-pal-red hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold"
+            >
+              Go to Login
+            </Link>
           </div>
-        </Layout>
+        </div>
+      </Layout>
     );
   }
 
   return (
-      <Layout>
-        <div className="bg-stone-50 min-h-screen py-8">
-          <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <aside className="lg:col-span-1 space-y-6">
-              <div className="bg-gradient-to-br from-white to-stone-50 p-6 rounded-xl shadow-sm border border-stone-100">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pal-green to-green-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
-                    {currentUser.firstName.charAt(0).toUpperCase()}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-stone-900 truncate">
-                      {currentUser.firstName} {currentUser.lastName}
-                    </h3>
-
-                    <p className="text-xs text-stone-600 uppercase tracking-wider mt-0.5 font-medium">
-                      {currentUser.role}
-                    </p>
-                  </div>
+    <Layout>
+      <div className="bg-stone-50 min-h-screen py-8">
+        <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <aside className="lg:col-span-1 space-y-6">
+            <div className="bg-gradient-to-br from-white to-stone-50 p-6 rounded-xl shadow-sm border border-stone-100">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pal-green to-green-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
+                  {currentUser.firstName.charAt(0).toUpperCase()}
                 </div>
-              </div>
 
-              <nav className="bg-white rounded-xl shadow-sm border border-stone-100 overflow-hidden flex flex-col">
-                <NavItem
-                    icon={<BarChart3 className="w-5 h-5" />}
-                    label="Overview"
-                    active
-                />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-stone-900 truncate">
+                    {currentUser.firstName} {currentUser.lastName}
+                  </h3>
 
-                <NavItem
-                    icon={<FileText className="w-5 h-5" />}
-                    label="My Contributions"
-                    onClick={() => showFutureFeature('My Contributions')}
-                />
-
-                <NavItem
-                    icon={<Bell className="w-5 h-5" />}
-                    label="Notifications"
-                    badge={pendingCount > 0 ? String(pendingCount) : undefined}
-                    onClick={() => showFutureFeature('Notifications')}
-                />
-
-                <NavItem
-                    icon={<User className="w-5 h-5" />}
-                    label="Profile Settings"
-                    onClick={() => showFutureFeature('Profile Settings')}
-                />
-
-                <div className="border-t border-stone-100 my-2" />
-
-                <NavItem
-                    icon={<LogOut className="w-5 h-5" />}
-                    label="Sign Out"
-                    danger
-                    onClick={handleSignOut}
-                />
-              </nav>
-
-              <div className="bg-gradient-to-br from-pal-black to-stone-900 text-white p-6 rounded-xl shadow-lg relative overflow-hidden">
-                <div className="relative z-10">
-                  <h4 className="font-bold text-lg mb-2">Need Help?</h4>
-
-                  <p className="text-stone-300 text-sm mb-4 leading-relaxed">
-                    Contact support for archival submission or verification help.
+                  <p className="text-xs text-stone-600 uppercase tracking-wider mt-0.5 font-medium">
+                    {currentUser.role}
                   </p>
-
-                  <button
-                      type="button"
-                      onClick={() => showFutureFeature('Contact Support')}
-                      className="text-xs font-bold uppercase tracking-wider text-pal-green hover:text-green-400 transition-colors"
-                  >
-                    Contact Support →
-                  </button>
                 </div>
-
-                <div className="absolute -bottom-4 -right-4 w-28 h-28 bg-pal-green/10 rounded-full blur-2xl" />
               </div>
-            </aside>
+            </div>
 
-            <main className="lg:col-span-3 space-y-6 min-w-0">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-stone-900">
-                    Contributor Dashboard
-                  </h1>
+            <nav className="bg-white rounded-xl shadow-sm border border-stone-100 overflow-hidden flex flex-col">
+              <NavItem
+                icon={<BarChart3 className="w-5 h-5" />}
+                label="Overview"
+                active
+              />
 
-                  <p className="text-stone-600 mt-2">
-                    Track your cultural submissions through the verification workflow.
+              <NavItem
+                icon={<FileText className="w-5 h-5" />}
+                label="My Contributions"
+                onClick={() => showFutureFeature('My Contributions')}
+              />
+
+              <NavItem
+                icon={<Bell className="w-5 h-5" />}
+                label="Notifications"
+                badge={pendingCount > 0 ? String(pendingCount) : undefined}
+                onClick={() => showFutureFeature('Notifications')}
+              />
+
+              <NavItem
+                icon={<User className="w-5 h-5" />}
+                label="Profile Settings"
+                onClick={() => showFutureFeature('Profile Settings')}
+              />
+
+              <div className="border-t border-stone-100 my-2" />
+
+              <NavItem
+                icon={<LogOut className="w-5 h-5" />}
+                label="Sign Out"
+                danger
+                onClick={handleSignOut}
+              />
+            </nav>
+
+            <div className="bg-gradient-to-br from-pal-black to-stone-900 text-white p-6 rounded-xl shadow-lg relative overflow-hidden">
+              <div className="relative z-10">
+                <h4 className="font-bold text-lg mb-2">Need Help?</h4>
+
+                <p className="text-stone-300 text-sm mb-4 leading-relaxed">
+                  Contact support for archival submission or verification help.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => showFutureFeature('Contact Support')}
+                  className="text-xs font-bold uppercase tracking-wider text-pal-green hover:text-green-400 transition-colors"
+                >
+                  Contact Support →
+                </button>
+              </div>
+
+              <div className="absolute -bottom-4 -right-4 w-28 h-28 bg-pal-green/10 rounded-full blur-2xl" />
+            </div>
+          </aside>
+
+          <main className="lg:col-span-3 space-y-6 min-w-0">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-stone-900">
+                  Contributor Dashboard
+                </h1>
+
+                <p className="text-stone-600 mt-2">
+                  Track your cultural submissions through the verification workflow.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsUploadOpen(true)}
+                className="bg-pal-red hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold shadow-md flex items-center gap-2 transition-all hover:scale-105 whitespace-nowrap"
+              >
+                <Upload className="w-5 h-5" />
+                Upload New Item
+              </button>
+            </div>
+
+            {successMessage && (
+              <div className="bg-green-50 border border-green-300 text-green-800 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+                <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0" />
+
+                <div className="flex-1">
+                  <p className="font-bold">Upload Received</p>
+
+                  <p className="text-sm mt-1 text-green-700">
+                    {successMessage}
                   </p>
                 </div>
 
                 <button
-                    type="button"
-                    onClick={() => setIsUploadOpen(true)}
-                    className="bg-pal-red hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold shadow-md flex items-center gap-2 transition-all hover:scale-105 whitespace-nowrap"
+                  type="button"
+                  onClick={() => setSuccessMessage('')}
+                  className="text-green-700 hover:text-green-900 transition-colors"
+                  aria-label="Close success message"
                 >
-                  <Upload className="w-5 h-5" />
-                  Upload New Item
+                  <X className="w-4 h-4" />
                 </button>
               </div>
+            )}
 
-              {successMessage && (
-                  <div className="bg-green-50 border border-green-300 text-green-800 rounded-xl p-4 flex items-start gap-3 shadow-sm">
-                    <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0" />
+            {backendError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+                <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
 
-                    <div className="flex-1">
-                      <p className="font-bold">Upload Received</p>
+                <div className="flex-1">
+                  <p className="font-bold">Backend Error</p>
 
-                      <p className="text-sm mt-1 text-green-700">
-                        {successMessage}
-                      </p>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={() => setSuccessMessage('')}
-                        className="text-green-700 hover:text-green-900 transition-colors"
-                        aria-label="Close success message"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-              )}
-
-              {backendError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 flex items-start gap-3 shadow-sm">
-                    <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
-
-                    <div className="flex-1">
-                      <p className="font-bold">Backend Error</p>
-
-                      <p className="text-sm mt-1">{backendError}</p>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={() => setBackendError('')}
-                        className="text-red-700 hover:text-red-900 transition-colors"
-                        aria-label="Close backend error"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <StatCard
-                    label="Total Contributions"
-                    value={userSubmissions.length}
-                    icon={<FileText className="text-blue-500 w-6 h-6" />}
-                    color="bg-blue-50"
-                />
-
-                <StatCard
-                    label="Published Items"
-                    value={publishedCount}
-                    icon={<CheckCircle className="text-green-500 w-6 h-6" />}
-                    color="bg-green-50"
-                />
-
-                <StatCard
-                    label="Pending Review"
-                    value={pendingCount}
-                    icon={<Clock className="text-orange-500 w-6 h-6" />}
-                    color="bg-orange-50"
-                />
-
-                <StatCard
-                    label="Needs Revision"
-                    value={revisionCount}
-                    icon={<AlertCircle className="text-red-500 w-6 h-6" />}
-                    color="bg-red-50"
-                />
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-stone-100 p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2">
-                  <div>
-                    <h3 className="text-lg font-bold text-stone-900">
-                      Verification Workflow
-                    </h3>
-
-                    <p className="text-sm text-stone-600 mt-1">
-                      All content must pass review before becoming public.
-                    </p>
-                  </div>
-
-                  {latestSubmission && (
-                      <span className="text-xs text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full">
-                    Tracking: <strong>{latestSubmission.title}</strong>
-                  </span>
-                  )}
+                  <p className="text-sm mt-1">{backendError}</p>
                 </div>
 
-                <div className="relative flex justify-between">
-                  <div className="absolute top-5 left-0 w-full h-1 bg-stone-100 z-0" />
+                <button
+                  type="button"
+                  onClick={() => setBackendError('')}
+                  className="text-red-700 hover:text-red-900 transition-colors"
+                  aria-label="Close backend error"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
-                  <div
-                      className="absolute top-5 left-0 h-1 bg-pal-green/30 z-0"
-                      style={{
-                        width:
-                            workflowStep === 0
-                                ? '0%'
-                                : workflowStep === 1
-                                    ? '16%'
-                                    : workflowStep === 2
-                                        ? '33%'
-                                        : workflowStep === 3
-                                            ? '66%'
-                                            : workflowStep === 4
-                                                ? '100%'
-                                                : '0%',
-                      }}
-                  />
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              <StatCard
+                label="Total Contributions"
+                value={userSubmissions.length}
+                icon={<FileText className="text-blue-500 w-6 h-6" />}
+                color="bg-blue-50"
+              />
 
-                  <Step
-                      number="1"
-                      title="Submission"
-                      active={workflowStep > 1}
-                      current={workflowStep === 1}
-                  />
+              <StatCard
+                label="Published Items"
+                value={publishedCount}
+                icon={<CheckCircle className="text-green-500 w-6 h-6" />}
+                color="bg-green-50"
+              />
 
-                  <Step
-                      number="2"
-                      title="AI Auto-Check"
-                      active={workflowStep > 2}
-                      current={workflowStep === 2}
-                  />
+              <StatCard
+                label="Pending Review"
+                value={pendingCount}
+                icon={<Clock className="text-orange-500 w-6 h-6" />}
+                color="bg-orange-50"
+              />
 
-                  <Step
-                      number="3"
-                      title="Heritage Check"
-                      active={workflowStep > 3}
-                      current={workflowStep === 3}
-                  />
+              <StatCard
+                label="Needs Revision"
+                value={revisionCount}
+                icon={<AlertCircle className="text-red-500 w-6 h-6" />}
+                color="bg-red-50"
+              />
+            </div>
 
-                  <Step
-                      number="4"
-                      title="Published"
-                      current={workflowStep === 4}
-                  />
+            <div className="bg-white rounded-xl shadow-sm border border-stone-100 p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2">
+                <div>
+                  <h3 className="text-lg font-bold text-stone-900">
+                    Verification Workflow
+                  </h3>
+
+                  <p className="text-sm text-stone-600 mt-1">
+                    All content must pass review before becoming public.
+                  </p>
                 </div>
 
                 {latestSubmission && (
-                    <div className="mt-6 bg-gradient-to-r from-stone-50 to-stone-100 border border-stone-200 rounded-xl p-4">
-                      <div className="flex items-start gap-2">
-                        <ShieldCheck className="w-5 h-5 text-pal-green shrink-0 mt-0.5" />
-
-                        <div>
-                          <p className="text-sm font-semibold text-stone-900">
-                            Current Status
-                          </p>
-
-                          <p className="text-sm text-stone-700 mt-1 leading-relaxed">
-                            {getStatusDescription(latestSubmission.status)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                )}
-
-                {!latestSubmission && (
-                    <div className="mt-6 bg-stone-50 border border-dashed border-stone-300 rounded-xl p-4 text-center">
-                      <p className="text-sm text-stone-500">
-                        No submissions yet. Click{' '}
-                        <strong>Upload New Item</strong> to get started.
-                      </p>
-                    </div>
+                  <span className="text-xs text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full">
+                    Tracking: <strong>{latestSubmission.title}</strong>
+                  </span>
                 )}
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-stone-100 overflow-hidden">
-                <div className="p-6 border-b border-stone-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-stone-900">
-                      Your Submissions
-                    </h3>
+              <div className="relative flex justify-between">
+                <div className="absolute top-5 left-0 w-full h-1 bg-stone-100 z-0" />
 
-                    <p className="text-sm text-stone-600 mt-1">
-                      These remain private until verification is complete.
-                    </p>
+                <div
+                  className="absolute top-5 left-0 h-1 bg-pal-green/30 z-0"
+                  style={{
+                    width:
+                      workflowStep === 0
+                        ? '0%'
+                        : workflowStep === 1
+                        ? '16%'
+                        : workflowStep === 2
+                        ? '33%'
+                        : workflowStep === 3
+                        ? '66%'
+                        : workflowStep === 4
+                        ? '100%'
+                        : '0%',
+                  }}
+                />
+
+                <Step
+                  number="1"
+                  title="Submission"
+                  active={workflowStep > 1}
+                  current={workflowStep === 1}
+                />
+
+                <Step
+                  number="2"
+                  title="AI Auto-Check"
+                  active={workflowStep > 2}
+                  current={workflowStep === 2}
+                />
+
+                <Step
+                  number="3"
+                  title="Heritage Check"
+                  active={workflowStep > 3}
+                  current={workflowStep === 3}
+                />
+
+                <Step
+                  number="4"
+                  title="Published"
+                  current={workflowStep === 4}
+                />
+              </div>
+
+              {latestSubmission && (
+                <div className="mt-6 bg-gradient-to-r from-stone-50 to-stone-100 border border-stone-200 rounded-xl p-4">
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="w-5 h-5 text-pal-green shrink-0 mt-0.5" />
+
+                    <div>
+                      <p className="text-sm font-semibold text-stone-900">
+                        Current Status
+                      </p>
+
+                      <p className="text-sm text-stone-700 mt-1 leading-relaxed">
+                        {getStatusDescription(latestSubmission.status)}
+                      </p>
+                    </div>
                   </div>
+                </div>
+              )}
 
-                  <button
-                      type="button"
-                      onClick={loadSubmissionsFromFirestore}
-                      disabled={isLoadingSubmissions}
-                      className="text-sm text-pal-red font-medium hover:underline self-start sm:self-auto flex items-center gap-2 disabled:opacity-60"
-                  >
-                    <RefreshCw
-                        className={`w-4 h-4 ${
-                            isLoadingSubmissions ? 'animate-spin' : ''
-                        }`}
-                    />
-                    Refresh
-                  </button>
+              {!latestSubmission && (
+                <div className="mt-6 bg-stone-50 border border-dashed border-stone-300 rounded-xl p-4 text-center">
+                  <p className="text-sm text-stone-500">
+                    No submissions yet. Click <strong>Upload New Item</strong> to get started.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-stone-100 overflow-hidden">
+              <div className="p-6 border-b border-stone-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-stone-900">
+                    Your Submissions
+                  </h3>
+
+                  <p className="text-sm text-stone-600 mt-1">
+                    These remain private until verification is complete.
+                  </p>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-stone-600">
-                    <thead className="bg-stone-100 text-xs uppercase font-bold text-stone-700">
+                <button
+                  type="button"
+                  onClick={loadSubmissionsFromFirestore}
+                  disabled={isLoadingSubmissions}
+                  className="text-sm text-pal-red font-medium hover:underline self-start sm:self-auto flex items-center gap-2 disabled:opacity-60"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${
+                      isLoadingSubmissions ? 'animate-spin' : ''
+                    }`}
+                  />
+                  Refresh
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-stone-600">
+                  <thead className="bg-stone-100 text-xs uppercase font-bold text-stone-700">
                     <tr>
                       <th className="px-6 py-4 font-bold">Title</th>
                       <th className="px-6 py-4 font-bold">Type</th>
                       <th className="px-6 py-4 font-bold">Date</th>
                       <th className="px-6 py-4 font-bold">Status</th>
-                      <th className="px-6 py-4 text-right font-bold">
-                        Details
-                      </th>
+                      <th className="px-6 py-4 text-right font-bold">Details</th>
                     </tr>
-                    </thead>
+                  </thead>
 
-                    <tbody className="divide-y divide-stone-100">
+                  <tbody className="divide-y divide-stone-100">
                     {isLoadingSubmissions ? (
-                        <tr>
-                          <td colSpan={5} className="px-6 py-16">
-                            <div className="text-center">
-                              <RefreshCw className="w-10 h-10 text-stone-300 mx-auto mb-3 animate-spin" />
+                      <tr>
+                        <td colSpan={5} className="px-6 py-16">
+                          <div className="text-center">
+                            <RefreshCw className="w-10 h-10 text-stone-300 mx-auto mb-3 animate-spin" />
 
-                              <p className="text-stone-600 font-medium">
-                                Loading submissions...
-                              </p>
-                            </div>
-                          </td>
-                        </tr>
+                            <p className="text-stone-600 font-medium">
+                              Loading submissions...
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
                     ) : userSubmissions.length > 0 ? (
-                        userSubmissions.map((item) => (
-                            <tr
-                                key={item.id}
-                                className="hover:bg-stone-50 transition-colors"
+                      userSubmissions.map((item) => (
+                        <tr
+                          key={item.id}
+                          className="hover:bg-stone-50 transition-colors"
+                        >
+                          <td className="px-6 py-4 font-medium text-stone-800">
+                            {item.title}
+                          </td>
+
+                          <td className="px-6 py-4">{item.type}</td>
+
+                          <td className="px-6 py-4 text-stone-500">
+                            {item.dateSubmitted}
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <StatusBadge status={item.status} />
+                          </td>
+
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedSubmission(item)}
+                              className="text-stone-400 hover:text-pal-black"
+                              aria-label={`View details for ${item.title}`}
                             >
-                              <td className="px-6 py-4 font-medium text-stone-800">
-                                {item.title}
-                              </td>
-
-                              <td className="px-6 py-4">{item.type}</td>
-
-                              <td className="px-6 py-4 text-stone-500">
-                                {item.dateSubmitted}
-                              </td>
-
-                              <td className="px-6 py-4">
-                                <StatusBadge status={item.status} />
-                              </td>
-
-                              <td className="px-6 py-4 text-right">
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedSubmission(item)}
-                                    className="text-stone-400 hover:text-pal-black"
-                                    aria-label={`View details for ${item.title}`}
-                                >
-                                  <ChevronRight className="w-5 h-5" />
-                                </button>
-                              </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                          <td colSpan={5} className="px-6 py-16">
-                            <div className="text-center">
-                              <Upload className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-
-                              <p className="text-stone-600 font-medium mb-1">
-                                No submissions yet
-                              </p>
-
-                              <p className="text-sm text-stone-500">
-                                Click <strong>Upload New Item</strong> to start
-                                contributing.
-                              </p>
-                            </div>
+                              <ChevronRight className="w-5 h-5" />
+                            </button>
                           </td>
                         </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-16">
+                          <div className="text-center">
+                            <Upload className="w-12 h-12 text-stone-300 mx-auto mb-3" />
+
+                            <p className="text-stone-600 font-medium mb-1">
+                              No submissions yet
+                            </p>
+
+                            <p className="text-sm text-stone-500">
+                              Click <strong>Upload New Item</strong> to start contributing.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
                     )}
-                    </tbody>
-                  </table>
-                </div>
+                  </tbody>
+                </table>
               </div>
-            </main>
-          </div>
+            </div>
+          </main>
         </div>
+      </div>
 
-        {isUploadOpen && (
-            <UploadModal
-                currentUser={currentUser}
-                onClose={() => setIsUploadOpen(false)}
-                onAddSubmission={handleAddSubmission}
-            />
-        )}
+      {isUploadOpen && (
+        <UploadModal
+          currentUser={currentUser}
+          onClose={() => setIsUploadOpen(false)}
+          onAddSubmission={handleAddSubmission}
+        />
+      )}
 
-        {selectedSubmission && (
-            <SubmissionDetailsModal
-                submission={selectedSubmission}
-                onClose={() => setSelectedSubmission(null)}
-            />
-        )}
-      </Layout>
+      {selectedSubmission && (
+        <SubmissionDetailsModal
+          submission={selectedSubmission}
+          onClose={() => setSelectedSubmission(null)}
+        />
+      )}
+    </Layout>
   );
 };
 
 const UploadModal = ({
-                       currentUser,
-                       onClose,
-                       onAddSubmission,
-                     }: {
+  currentUser,
+  onClose,
+  onAddSubmission,
+}: {
   currentUser: CurrentUser;
   onClose: () => void;
   onAddSubmission: (submission: NewSubmissionInput) => Promise<void>;
@@ -991,7 +975,7 @@ const UploadModal = ({
 
     if (!isAllowedFileType(file)) {
       setError(
-          'Unsupported file type. Please upload PDF, DOC, DOCX, PNG, JPG, JPEG, MP3, MP4, or WAV.'
+        'Unsupported file type. Please upload PDF, DOC, DOCX, PNG, JPG, JPEG, MP3, MP4, or WAV.'
       );
       return;
     }
@@ -1022,291 +1006,290 @@ const UploadModal = ({
   };
 
   return (
-      <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6 border-b border-stone-100 flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-bold text-stone-800">
-                Submit Cultural Content
-              </h2>
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-stone-100 flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-bold text-stone-800">
+              Submit Cultural Content
+            </h2>
 
-              <p className="text-sm text-stone-500">
-                Upload documents, photos, audio, or videos for preservation review.
-              </p>
-            </div>
-
-            <button
-                type="button"
-                onClick={onClose}
-                className="text-stone-400 hover:text-pal-red"
-                aria-label="Close upload form"
-                disabled={isSubmitting}
-            >
-              <X className="w-6 h-6" />
-            </button>
+            <p className="text-sm text-stone-500">
+              Upload documents, photos, audio, or videos for preservation review.
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <span>{error}</span>
-                </div>
-            )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-stone-400 hover:text-pal-red"
+            aria-label="Close upload form"
+            disabled={isSubmitting}
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-stone-700 flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-pal-green shrink-0 mt-0.5" />
-
-              <div>
-                <p className="font-semibold text-stone-800">
-                  Verification required before publishing
-                </p>
-
-                <p className="mt-1">
-                  After submission, the item starts at AI Auto-Check. It will not
-                  be displayed in the public archive until it passes the full
-                  verification workflow.
-                </p>
-              </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
             </div>
+          )}
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-stone-700 flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-pal-green shrink-0 mt-0.5" />
 
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
-                Title
-              </label>
-
-              <input
-                  type="text"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-pal-green focus:border-pal-green text-stone-900 placeholder:text-stone-400 bg-white"
-                  placeholder="Example: Poem from 1948"
-                  disabled={isSubmitting}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
-                  Content Type
-                </label>
-
-                <select
-                    value={type}
-                    onChange={(event) => setType(event.target.value)}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white text-stone-900 focus:ring-pal-green focus:border-pal-green"
-                    disabled={isSubmitting}
-                >
-                  <option>Document</option>
-                  <option>Image</option>
-                  <option>Audio</option>
-                  <option>Video</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">
-                  Category
-                </label>
-
-                <select
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value)}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white text-stone-900 focus:ring-pal-green focus:border-pal-green"
-                    disabled={isSubmitting}
-                >
-                  <option>Historical Document</option>
-                  <option>Literary Work</option>
-                  <option>Historical Photo</option>
-                  <option>Oral History</option>
-                  <option>Folk Performance</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
-                Description
-              </label>
-
-              <textarea
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-pal-green focus:border-pal-green min-h-28 text-stone-900 placeholder:text-stone-400 bg-white"
-                  placeholder="Write a short description about the uploaded item..."
-                  disabled={isSubmitting}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
-                Upload File
-              </label>
-
-              <input
-                  type="file"
-                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.mp3,.mp4,.wav"
-                  onChange={(event) => {
-                    setError('');
-                    setFile(event.target.files?.[0] || null);
-                  }}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white text-stone-900 file:mr-4 file:rounded-md file:border-0 file:bg-stone-100 file:px-4 file:py-2 file:text-stone-700 hover:file:bg-stone-200"
-                  disabled={isSubmitting}
-              />
-
-              <p className="text-xs text-stone-400 mt-2">
-                Supported files: PDF, DOC, DOCX, PNG, JPG, JPEG, MP3, MP4, WAV.
-                Maximum size: 50 MB.
+              <p className="font-semibold text-stone-800">
+                Verification required before publishing
               </p>
 
-              {file && (
-                  <p className="text-xs text-stone-500 mt-2">
-                    Selected file: {file.name} ({formatFileSize(file.size)})
-                  </p>
+              <p className="mt-1">
+                After submission, the item starts at AI Auto-Check. It will not
+                be displayed in the public archive until it passes the full
+                verification workflow.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              Title
+            </label>
+
+            <input
+              type="text"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-pal-green focus:border-pal-green text-stone-900 placeholder:text-stone-400 bg-white"
+              placeholder="Example: Poem from 1948"
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-1">
+                Content Type
+              </label>
+
+              <select
+                value={type}
+                onChange={(event) => setType(event.target.value)}
+                className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white text-stone-900 focus:ring-pal-green focus:border-pal-green"
+                disabled={isSubmitting}
+              >
+                <option>Document</option>
+                <option>Image</option>
+                <option>Audio</option>
+                <option>Video</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-1">
+                Category
+              </label>
+
+              <select
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+                className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white text-stone-900 focus:ring-pal-green focus:border-pal-green"
+                disabled={isSubmitting}
+              >
+                <option>Historical Document</option>
+                <option>Literary Work</option>
+                <option>Historical Photo</option>
+                <option>Oral History</option>
+                <option>Folk Performance</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              Description
+            </label>
+
+            <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-pal-green focus:border-pal-green min-h-28 text-stone-900 placeholder:text-stone-400 bg-white"
+              placeholder="Write a short description about the uploaded item..."
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              Upload File
+            </label>
+
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.mp3,.mp4,.wav"
+              onChange={(event) => {
+                setError('');
+                setFile(event.target.files?.[0] || null);
+              }}
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white text-stone-900 file:mr-4 file:rounded-md file:border-0 file:bg-stone-100 file:px-4 file:py-2 file:text-stone-700 hover:file:bg-stone-200"
+              disabled={isSubmitting}
+            />
+
+            <p className="text-xs text-stone-400 mt-2">
+              Supported files: PDF, DOC, DOCX, PNG, JPG, JPEG, MP3, MP4, WAV.
+              Maximum size: 50 MB.
+            </p>
+
+            {file && (
+              <p className="text-xs text-stone-500 mt-2">
+                Selected file: {file.name} ({formatFileSize(file.size)})
+              </p>
+            )}
+          </div>
+
+          <div className="bg-stone-50 border border-stone-200 rounded-lg p-4 text-sm text-stone-600">
+            Workflow: <b>Submit Form</b> → <b>AI Auto-Check</b> →{' '}
+            <b>Heritage Check</b> → <b>Published</b>.
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="px-5 py-2 rounded-lg border border-stone-300 text-stone-600 hover:bg-stone-50 disabled:opacity-60"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-5 py-2 rounded-lg bg-pal-red text-white font-semibold hover:bg-red-700 flex items-center gap-2 disabled:opacity-60"
+            >
+              {isSubmitting ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Uploading and checking...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4" />
+                  Submit Item
+                </>
               )}
-            </div>
-
-            <div className="bg-stone-50 border border-stone-200 rounded-lg p-4 text-sm text-stone-600">
-              Workflow:{' '}
-              <b>Submit Form</b> → <b>AI Auto-Check</b> →{' '}
-              <b>Heritage Check</b> → <b>Published</b>.
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={isSubmitting}
-                  className="px-5 py-2 rounded-lg border border-stone-300 text-stone-600 hover:bg-stone-50 disabled:opacity-60"
-              >
-                Cancel
-              </button>
-
-              <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-5 py-2 rounded-lg bg-pal-red text-white font-semibold hover:bg-red-700 flex items-center gap-2 disabled:opacity-60"
-              >
-                {isSubmitting ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </>
-                ) : (
-                    <>
-                      <Upload className="w-4 h-4" />
-                      Submit Item
-                    </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
+            </button>
+          </div>
+        </form>
       </div>
+    </div>
   );
 };
 
 const SubmissionDetailsModal = ({
-                                  submission,
-                                  onClose,
-                                }: {
+  submission,
+  onClose,
+}: {
   submission: Submission;
   onClose: () => void;
 }) => {
   return (
-      <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden">
-          <div className="p-6 border-b border-stone-100 flex justify-between items-start gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-stone-800">
-                Submission Details
-              </h2>
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden">
+        <div className="p-6 border-b border-stone-100 flex justify-between items-start gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-stone-800">
+              Submission Details
+            </h2>
 
-              <p className="text-sm text-stone-500 mt-1">
-                Review the uploaded item and its current verification status.
-              </p>
-            </div>
-
-            <button
-                type="button"
-                onClick={onClose}
-                className="text-stone-400 hover:text-pal-red"
-                aria-label="Close submission details"
-            >
-              <X className="w-6 h-6" />
-            </button>
+            <p className="text-sm text-stone-500 mt-1">
+              Review the uploaded item and its current verification status.
+            </p>
           </div>
 
-          <div className="p-6 space-y-5">
-            <div>
-              <h3 className="text-lg font-bold text-stone-900">
-                {submission.title}
-              </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-stone-400 hover:text-pal-red"
+            aria-label="Close submission details"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
-              <div className="mt-2">
-                <StatusBadge status={submission.status} />
-              </div>
+        <div className="p-6 space-y-5">
+          <div>
+            <h3 className="text-lg font-bold text-stone-900">
+              {submission.title}
+            </h3>
+
+            <div className="mt-2">
+              <StatusBadge status={submission.status} />
             </div>
+          </div>
 
-            <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 space-y-2 text-sm text-stone-600">
-              <p>
-                <span className="font-semibold text-stone-800">Type:</span>{' '}
-                {submission.type}
-              </p>
+          <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 space-y-2 text-sm text-stone-600">
+            <p>
+              <span className="font-semibold text-stone-800">Type:</span>{' '}
+              {submission.type}
+            </p>
 
-              <p>
-                <span className="font-semibold text-stone-800">Category:</span>{' '}
-                {submission.category}
-              </p>
+            <p>
+              <span className="font-semibold text-stone-800">Category:</span>{' '}
+              {submission.category}
+            </p>
 
-              <p>
-                <span className="font-semibold text-stone-800">File:</span>{' '}
-                {submission.fileName}
-              </p>
+            <p>
+              <span className="font-semibold text-stone-800">File:</span>{' '}
+              {submission.fileName}
+            </p>
 
-              <p>
-                <span className="font-semibold text-stone-800">File Size:</span>{' '}
-                {submission.fileSize}
-              </p>
+            <p>
+              <span className="font-semibold text-stone-800">File Size:</span>{' '}
+              {submission.fileSize}
+            </p>
 
-              <p>
+            <p>
               <span className="font-semibold text-stone-800">
                 Date Submitted:
               </span>{' '}
-                {submission.dateSubmitted}
-              </p>
-            </div>
+              {submission.dateSubmitted}
+            </p>
+          </div>
 
-            <div>
-              <h4 className="font-semibold text-stone-800 mb-2">Description</h4>
+          <div>
+            <h4 className="font-semibold text-stone-800 mb-2">Description</h4>
 
-              <p className="text-sm text-stone-600 leading-relaxed bg-white border border-stone-200 rounded-xl p-4">
-                {submission.description}
-              </p>
-            </div>
+            <p className="text-sm text-stone-600 leading-relaxed bg-white border border-stone-200 rounded-xl p-4">
+              {submission.description}
+            </p>
+          </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-              <h4 className="font-semibold text-stone-800 mb-2">
-                Current Workflow Meaning
-              </h4>
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <h4 className="font-semibold text-stone-800 mb-2">
+              Current Workflow Meaning
+            </h4>
 
-              <p className="text-sm text-stone-600 leading-relaxed">
-                {getStatusDescription(submission.status)}
-              </p>
-            </div>
+            <p className="text-sm text-stone-600 leading-relaxed">
+              {getStatusDescription(submission.status)}
+            </p>
+          </div>
 
-            <div className="flex justify-end">
-              <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-5 py-2 rounded-lg bg-pal-red text-white font-semibold hover:bg-red-700"
-              >
-                Close
-              </button>
-            </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2 rounded-lg bg-pal-red text-white font-semibold hover:bg-red-700"
+            >
+              Close
+            </button>
           </div>
         </div>
       </div>
+    </div>
   );
 };
 
