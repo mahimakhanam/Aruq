@@ -387,25 +387,7 @@ const DashboardPage = () => {
 
     try {
       setBackendError('');
-      setIsSubmitting(true); // Assuming you add this to UI state or just use local loading
 
-      // --- 1. SEND TO AI MODERATION (RENDER) FIRST ---
-      const aiResponse = await fetch("https://aruq-backend.onrender.com/moderate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: newSubmission.description }),
-      });
-
-      const aiData = await aiResponse.json();
-      console.log("AI Backend response:", aiData);
-
-      // --- 2. LOGIC GATE: If AI says no, stop here! ---
-      // Adjust 'status' based on what your actual API returns
-      if (aiData.status === "flagged") {
-        throw new Error("Content flagged by AI moderation. Please edit your submission.");
-      }
-
-      // --- 3. SAVE TO FIREBASE (Only if AI check passes) ---
       const createdAtMillis = Date.now();
 
       const firestoreSubmission = {
@@ -421,7 +403,7 @@ const DashboardPage = () => {
         authorId: auth.currentUser?.uid || '',
         isPublished: false,
         verificationStage: 'AI Auto-Check',
-        aiCheckResult: 'Approved', // You can save the result here!
+        aiCheckResult: 'Pending',
         heritageReviewNote: '',
         createdAtMillis,
         createdAt: serverTimestamp(),
@@ -444,13 +426,12 @@ const DashboardPage = () => {
       ]);
 
       setIsUploadOpen(false);
-      setSuccessMessage('Submission saved successfully. It passed the AI check!');
 
-    } catch (error: any) {
-      // If AI fails or Firebase fails, this catch block handles it
-      setBackendError(error.message || "Something went wrong during submission.");
-    } finally {
-      setIsSubmitting(false);
+      setSuccessMessage(
+          'Submission saved successfully. It is now in AI Auto-Check and will remain private until verification is completed.'
+      );
+    } catch (error) {
+      setBackendError(getReadableBackendError(error));
     }
   };
 
