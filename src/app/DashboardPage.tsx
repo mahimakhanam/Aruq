@@ -46,9 +46,8 @@ type SubmissionStatus =
   | 'Needs Revision';
 
 type SubmissionCategory =
-  | 'safe_and_relevant'
+  | 'safe'
   | 'unsafe'
-  | 'irrelevant'
   | 'system_error'
   | 'pending'
   | '';
@@ -122,6 +121,7 @@ const getTodayDate = () => {
 
 const getWorkflowStep = (status?: SubmissionStatus) => {
   if (!status) return 0;
+
   if (
     status === 'AI Auto-Check' ||
     status === 'AI Approved' ||
@@ -129,25 +129,20 @@ const getWorkflowStep = (status?: SubmissionStatus) => {
   ) {
     return 2;
   }
+
   if (status === 'Heritage Check' || status === 'Needs Revision') return 3;
   if (status === 'Published') return 4;
+
   return 1;
 };
 
-const getStatusDescription = (
-  status: SubmissionStatus,
-  aiCategory?: SubmissionCategory
-) => {
+const getStatusDescription = (status: SubmissionStatus) => {
   if (status === 'AI Auto-Check') {
     return 'The item has been uploaded and is waiting for automated review.';
   }
 
   if (status === 'AI Approved') {
     return 'The item passed automated review and is ready for the next verification stage.';
-  }
-
-  if (status === 'Flagged' && aiCategory === 'irrelevant') {
-    return 'The item was marked as unrelated to Palestinian heritage and cannot continue in the current workflow.';
   }
 
   if (status === 'Flagged') {
@@ -209,17 +204,6 @@ const convertFirestoreDocToSubmission = (
     aiCategory: data.aiCategory || '',
     moderationReason: data.moderationReason || '',
   };
-};
-
-const getDisplayStatusLabel = (
-  status: SubmissionStatus,
-  aiCategory?: SubmissionCategory
-) => {
-  if (status === 'Flagged' && aiCategory === 'irrelevant') {
-    return 'Irrelevant';
-  }
-
-  return status;
 };
 
 const NavItem = ({
@@ -328,18 +312,10 @@ const Step = ({
   </div>
 );
 
-const StatusBadge = ({
-  status,
-  aiCategory,
-}: {
-  status: SubmissionStatus;
-  aiCategory?: SubmissionCategory;
-}) => {
+const StatusBadge = ({ status }: { status: SubmissionStatus }) => {
   const style =
     status === 'Published'
       ? 'bg-green-100 text-green-700 border-green-200'
-      : status === 'Flagged' && aiCategory === 'irrelevant'
-      ? 'bg-gray-100 text-gray-700 border-gray-200'
       : status === 'Flagged'
       ? 'bg-red-100 text-red-700 border-red-200'
       : status === 'Needs Revision'
@@ -354,7 +330,7 @@ const StatusBadge = ({
     <span
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${style}`}
     >
-      {getDisplayStatusLabel(status, aiCategory)}
+      {status}
     </span>
   );
 };
@@ -479,7 +455,7 @@ const DashboardPage = () => {
       response: { ok: true },
       data: {
         status: 'approved',
-        category: 'unsupported_skipped',
+        category: 'safe',
       },
     };
   };
@@ -539,13 +515,13 @@ const DashboardPage = () => {
 
       let finalStatus: SubmissionStatus = 'AI Approved';
       let aiCheckResult = 'Approved';
-      let aiCategory: SubmissionCategory = 'safe_and_relevant';
+      let aiCategory: SubmissionCategory = 'safe';
       let moderationReason = '';
 
       if (textData.status === 'flagged') {
         finalStatus = 'Flagged';
         aiCheckResult = 'Flagged';
-        aiCategory = textData.category || 'unsafe';
+        aiCategory = 'unsafe';
         moderationReason =
           textData.reason || 'Description flagged by AI moderation.';
       } else if (newSubmission.file) {
@@ -560,7 +536,7 @@ const DashboardPage = () => {
         if (fileData.status === 'flagged') {
           finalStatus = 'Flagged';
           aiCheckResult = 'Flagged';
-          aiCategory = fileData.category || 'unsafe';
+          aiCategory = 'unsafe';
           moderationReason =
             fileData.reason || 'File content flagged by AI moderation.';
         }
@@ -581,20 +557,11 @@ const DashboardPage = () => {
 
       if (finalStatus === 'Flagged') {
         setSuccessMessage('');
-
-        if (aiCategory === 'irrelevant') {
-          setBackendError(
-            moderationReason
-              ? `Submission was marked as unrelated to Palestinian heritage: ${moderationReason}`
-              : 'Submission was marked as unrelated to Palestinian heritage.'
-          );
-        } else {
-          setBackendError(
-            moderationReason
-              ? `Submission was flagged during AI moderation: ${moderationReason}`
-              : 'Submission was flagged during AI moderation.'
-          );
-        }
+        setBackendError(
+          moderationReason
+            ? `Submission was flagged during AI moderation: ${moderationReason}`
+            : 'Submission was flagged during AI moderation.'
+        );
       } else {
         setBackendError('');
         setSuccessMessage(
@@ -764,7 +731,7 @@ const DashboardPage = () => {
                 <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
 
                 <div className="flex-1">
-                  <p className="font-bold">Submission Review Result</p>
+                  <p className="font-bold">Submission Flagged</p>
 
                   <p className="text-sm mt-1">{backendError}</p>
                 </div>
@@ -889,10 +856,7 @@ const DashboardPage = () => {
                       </p>
 
                       <p className="text-sm text-stone-700 mt-1 leading-relaxed">
-                        {getStatusDescription(
-                          latestSubmission.status,
-                          latestSubmission.aiCategory
-                        )}
+                        {getStatusDescription(latestSubmission.status)}
                       </p>
                     </div>
                   </div>
@@ -977,10 +941,7 @@ const DashboardPage = () => {
                           </td>
 
                           <td className="px-6 py-4">
-                            <StatusBadge
-                              status={item.status}
-                              aiCategory={item.aiCategory}
-                            />
+                            <StatusBadge status={item.status} />
                           </td>
 
                           <td className="px-6 py-4 text-right">
@@ -1317,10 +1278,7 @@ const SubmissionDetailsModal = ({
             </h3>
 
             <div className="mt-2">
-              <StatusBadge
-                status={submission.status}
-                aiCategory={submission.aiCategory}
-              />
+              <StatusBadge status={submission.status} />
             </div>
           </div>
 
@@ -1374,7 +1332,7 @@ const SubmissionDetailsModal = ({
             </h4>
 
             <p className="text-sm text-stone-600 leading-relaxed">
-              {getStatusDescription(submission.status, submission.aiCategory)}
+              {getStatusDescription(submission.status)}
             </p>
           </div>
 
