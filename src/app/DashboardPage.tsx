@@ -45,6 +45,14 @@ type SubmissionStatus =
   | 'Published'
   | 'Needs Revision';
 
+type SubmissionCategory =
+  | 'safe_and_relevant'
+  | 'unsafe'
+  | 'irrelevant'
+  | 'system_error'
+  | 'pending'
+  | '';
+
 type Submission = {
   id: string;
   title: string;
@@ -59,6 +67,8 @@ type Submission = {
   authorId?: string;
   source?: 'Firestore' | 'Local';
   createdAtMillis?: number;
+  aiCategory?: SubmissionCategory;
+  moderationReason?: string;
 };
 
 type NewSubmissionInput = {
@@ -73,6 +83,7 @@ type NewSubmissionInput = {
 
 const CURRENT_USER_KEY = 'aruqCurrentUser';
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const API_BASE = 'https://aruq-backend.onrender.com';
 
 const ALLOWED_FILE_EXTENSIONS = [
   'pdf',
@@ -123,13 +134,20 @@ const getWorkflowStep = (status?: SubmissionStatus) => {
   return 1;
 };
 
-const getStatusDescription = (status: SubmissionStatus) => {
+const getStatusDescription = (
+  status: SubmissionStatus,
+  aiCategory?: SubmissionCategory
+) => {
   if (status === 'AI Auto-Check') {
     return 'The item has been uploaded and is waiting for automated review.';
   }
 
   if (status === 'AI Approved') {
     return 'The item passed automated review and is ready for the next verification stage.';
+  }
+
+  if (status === 'Flagged' && aiCategory === 'irrelevant') {
+    return 'The item was marked as unrelated to Palestinian heritage and cannot continue in the current workflow.';
   }
 
   if (status === 'Flagged') {
@@ -188,7 +206,20 @@ const convertFirestoreDocToSubmission = (
     authorId: data.authorId || '',
     source: 'Firestore',
     createdAtMillis: data.createdAtMillis || 0,
+    aiCategory: data.aiCategory || '',
+    moderationReason: data.moderationReason || '',
   };
+};
+
+const getDisplayStatusLabel = (
+  status: SubmissionStatus,
+  aiCategory?: SubmissionCategory
+) => {
+  if (status === 'Flagged' && aiCategory === 'irrelevant') {
+    return 'Irrelevant';
+  }
+
+  return status;
 };
 
 const NavItem = ({
@@ -297,10 +328,18 @@ const Step = ({
   </div>
 );
 
-const StatusBadge = ({ status }: { status: SubmissionStatus }) => {
+const StatusBadge = ({
+  status,
+  aiCategory,
+}: {
+  status: SubmissionStatus;
+  aiCategory?: SubmissionCategory;
+}) => {
   const style =
     status === 'Published'
       ? 'bg-green-100 text-green-700 border-green-200'
+      : status === 'Flagged' && aiCategory === 'irrelevant'
+      ? 'bg-gray-100 text-gray-700 border-gray-200'
       : status === 'Flagged'
       ? 'bg-red-100 text-red-700 border-red-200'
       : status === 'Needs Revision'
@@ -315,7 +354,7 @@ const StatusBadge = ({ status }: { status: SubmissionStatus }) => {
     <span
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${style}`}
     >
-      {status}
+      {getDisplayStatusLabel(status, aiCategory)}
     </span>
   );
 };
@@ -381,11 +420,12 @@ const DashboardPage = () => {
   ).length;
 
   const pendingCount = userSubmissions.filter(
-    (item) => item.status !== 'Published'
+    (item) =>
+      item.status === 'AI Auto-Check' || item.status === 'Heritage Check'
   ).length;
 
   const revisionCount = userSubmissions.filter(
-    (item) => item.status === 'Needs Revision'
+    (item) => item.status === 'Needs Revision' || item.status === 'Flagged'
   ).length;
 
   const latestSubmission = userSubmissions[0];
@@ -400,6 +440,48 @@ const DashboardPage = () => {
       localStorage.removeItem(CURRENT_USER_KEY);
       navigate('/auth');
     }
+  };
+
+  const callModeration = async (
+    endpoint: string,
+    body: FormData | object,
+    isFormData = false
+  ) => {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      body: isFormData ? (body as FormData) : JSON.stringify(body),
+      headers: isFormData ? undefined : { 'Content-Type': 'application/json' },
+    });
+
+    const data = await response.json();
+    return { response, data };
+  };
+
+  const moderateText = async (description: string) => {
+    return callModeration('/moderate', { text: description });
+  };
+
+  const moderateFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const extension = file.name.split('.').pop()?.toLowerCase();
+
+    if (extension === 'pdf') {
+      return callModeration('/moderate-document', formData, true);
+    }
+
+    if (file.type.startsWith('image/')) {
+      return callModeration('/moderate-image', formData, true);
+    }
+
+    return {
+      response: { ok: true },
+      data: {
+        status: 'approved',
+        category: 'unsupported_skipped',
+      },
+    };
   };
 
   const handleAddSubmission = async (newSubmission: NewSubmissionInput) => {
@@ -427,6 +509,8 @@ const DashboardPage = () => {
         isPublished: false,
         verificationStage: 'AI Auto-Check',
         aiCheckResult: 'Pending',
+        aiCategory: 'pending',
+        moderationReason: '',
         heritageReviewNote: '',
         createdAtMillis,
         createdAt: serverTimestamp(),
@@ -445,13 +529,9 @@ const DashboardPage = () => {
         ...previousSubmissions,
       ]);
 
-      const textResponse = await fetch('https://aruq-backend.onrender.com/moderate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: newSubmission.description }),
-      });
-
-      const textData = await textResponse.json();
+      const { response: textResponse, data: textData } = await moderateText(
+        newSubmission.description || ''
+      );
 
       if (!textResponse.ok || textData.status === 'error') {
         throw new Error(textData.reason || 'Text moderation failed.');
@@ -459,40 +539,30 @@ const DashboardPage = () => {
 
       let finalStatus: SubmissionStatus = 'AI Approved';
       let aiCheckResult = 'Approved';
+      let aiCategory: SubmissionCategory = 'safe_and_relevant';
       let moderationReason = '';
 
       if (textData.status === 'flagged') {
         finalStatus = 'Flagged';
         aiCheckResult = 'Flagged';
+        aiCategory = textData.category || 'unsafe';
         moderationReason =
           textData.reason || 'Description flagged by AI moderation.';
-      } else {
-        const extension = newSubmission.file.name.split('.').pop()?.toLowerCase();
+      } else if (newSubmission.file) {
+        const { response: fileResponse, data: fileData } = await moderateFile(
+          newSubmission.file
+        );
 
-        if (extension === 'pdf') {
-          const formData = new FormData();
-          formData.append('file', newSubmission.file);
+        if (!fileResponse.ok || fileData.status === 'error') {
+          throw new Error(fileData.reason || 'File moderation failed.');
+        }
 
-          const docResponse = await fetch(
-            'https://aruq-backend.onrender.com/moderate-document',
-            {
-              method: 'POST',
-              body: formData,
-            }
-          );
-
-          const docData = await docResponse.json();
-
-          if (!docResponse.ok || docData.status === 'error') {
-            throw new Error(docData.reason || 'Document moderation failed.');
-          }
-
-          if (docData.status === 'flagged') {
-            finalStatus = 'Flagged';
-            aiCheckResult = 'Flagged';
-            moderationReason =
-              docData.reason || 'PDF content flagged by AI moderation.';
-          }
+        if (fileData.status === 'flagged') {
+          finalStatus = 'Flagged';
+          aiCheckResult = 'Flagged';
+          aiCategory = fileData.category || 'unsafe';
+          moderationReason =
+            fileData.reason || 'File content flagged by AI moderation.';
         }
       }
 
@@ -500,6 +570,8 @@ const DashboardPage = () => {
         status: finalStatus,
         verificationStage: 'AI Auto-Check',
         aiCheckResult,
+        aiCategory,
+        moderationReason,
         heritageReviewNote: moderationReason,
       });
 
@@ -509,11 +581,20 @@ const DashboardPage = () => {
 
       if (finalStatus === 'Flagged') {
         setSuccessMessage('');
-        setBackendError(
-          moderationReason
-            ? `Submission was flagged during AI moderation: ${moderationReason}`
-            : 'Submission was flagged during AI moderation.'
-        );
+
+        if (aiCategory === 'irrelevant') {
+          setBackendError(
+            moderationReason
+              ? `Submission was marked as unrelated to Palestinian heritage: ${moderationReason}`
+              : 'Submission was marked as unrelated to Palestinian heritage.'
+          );
+        } else {
+          setBackendError(
+            moderationReason
+              ? `Submission was flagged during AI moderation: ${moderationReason}`
+              : 'Submission was flagged during AI moderation.'
+          );
+        }
       } else {
         setBackendError('');
         setSuccessMessage(
@@ -683,7 +764,7 @@ const DashboardPage = () => {
                 <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
 
                 <div className="flex-1">
-                  <p className="font-bold">Submission Flagged</p>
+                  <p className="font-bold">Submission Review Result</p>
 
                   <p className="text-sm mt-1">{backendError}</p>
                 </div>
@@ -808,7 +889,10 @@ const DashboardPage = () => {
                       </p>
 
                       <p className="text-sm text-stone-700 mt-1 leading-relaxed">
-                        {getStatusDescription(latestSubmission.status)}
+                        {getStatusDescription(
+                          latestSubmission.status,
+                          latestSubmission.aiCategory
+                        )}
                       </p>
                     </div>
                   </div>
@@ -893,7 +977,10 @@ const DashboardPage = () => {
                           </td>
 
                           <td className="px-6 py-4">
-                            <StatusBadge status={item.status} />
+                            <StatusBadge
+                              status={item.status}
+                              aiCategory={item.aiCategory}
+                            />
                           </td>
 
                           <td className="px-6 py-4 text-right">
@@ -1230,7 +1317,10 @@ const SubmissionDetailsModal = ({
             </h3>
 
             <div className="mt-2">
-              <StatusBadge status={submission.status} />
+              <StatusBadge
+                status={submission.status}
+                aiCategory={submission.aiCategory}
+              />
             </div>
           </div>
 
@@ -1261,6 +1351,13 @@ const SubmissionDetailsModal = ({
               </span>{' '}
               {submission.dateSubmitted}
             </p>
+
+            {submission.moderationReason && (
+              <p>
+                <span className="font-semibold text-stone-800">AI Note:</span>{' '}
+                {submission.moderationReason}
+              </p>
+            )}
           </div>
 
           <div>
@@ -1277,7 +1374,7 @@ const SubmissionDetailsModal = ({
             </h4>
 
             <p className="text-sm text-stone-600 leading-relaxed">
-              {getStatusDescription(submission.status)}
+              {getStatusDescription(submission.status, submission.aiCategory)}
             </p>
           </div>
 
