@@ -505,8 +505,13 @@ const DashboardPage = () => {
         ...previousSubmissions,
       ]);
 
+      const combinedTextForModeration = `
+      Title: ${newSubmission.title || ''}
+      Description: ${newSubmission.description || ''}
+      `;
+      
       const { response: textResponse, data: textData } = await moderateText(
-        newSubmission.description || ''
+        combinedTextForModeration
       );
 
       if (!textResponse.ok || textData.status === 'error') {
@@ -523,7 +528,7 @@ const DashboardPage = () => {
         aiCheckResult = 'Flagged';
         aiCategory = 'unsafe';
         moderationReason =
-          textData.reason || 'Description flagged by AI moderation.';
+          textData.reason || 'Title or description flagged by AI moderation.';
       } else if (newSubmission.file) {
         const { response: fileResponse, data: fileData } = await moderateFile(
           newSubmission.file
