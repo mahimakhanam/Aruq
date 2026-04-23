@@ -485,73 +485,70 @@ const DashboardPage = () => {
   };
 
   const handleAddSubmission = async (newSubmission: NewSubmissionInput) => {
-  if (!currentUser) {
-    setBackendError('You must be logged in before uploading a submission.');
-    return;
-  }
-
-  try {
-    setBackendError('');
-
-    const createdAtMillis = Date.now();
-
-    const firestoreSubmission = {
-      title: newSubmission.title,
-      type: newSubmission.type,
-      category: newSubmission.category,
-      description: newSubmission.description,
-      fileName: newSubmission.fileName,
-      fileSize: newSubmission.fileSize,
-      dateSubmitted: getTodayDate(),
-      status: 'AI Auto-Check' as SubmissionStatus,
-      authorEmail: currentUser.email,
-      authorId: auth.currentUser?.uid || '',
-      isPublished: false,
-      verificationStage: 'AI Auto-Check',
-      aiCheckResult: 'Pending',
-      aiCategory: 'pending',
-      moderationReason: '',
-      heritageReviewNote: '',
-      createdAtMillis,
-      createdAt: serverTimestamp(),
-    };
-
-    const docRef = await addDoc(collection(db, 'submissions'), firestoreSubmission);
-
-    const savedSubmission: Submission = {
-      id: docRef.id,
-      ...firestoreSubmission,
-      source: 'Firestore',
-    };
-
-    setSubmissions((previousSubmissions) => [
-      savedSubmission,
-      ...previousSubmissions,
-    ]);
-
-    let finalStatus: SubmissionStatus = 'AI Approved';
-    let aiCheckResult = 'Approved';
-    let aiCategory: SubmissionCategory = 'safe_and_relevant';
-    let moderationReason = '';
-
-    // 1. TEXT SAFETY CHECK ONLY
-    const { response: textResponse, data: textData } = await moderateText(
-      newSubmission.description || ''
-    );
-
-    if (!textResponse.ok || textData.status === 'error') {
-      throw new Error(textData.reason || 'Text moderation failed.');
+    if (!currentUser) {
+      setBackendError('You must be logged in before uploading a submission.');
+      return;
     }
 
-    if (textData.status === 'flagged') {
-      finalStatus = 'Flagged';
-      aiCheckResult = 'Flagged';
-      aiCategory = 'unsafe';
-      moderationReason =
-        textData.reason || 'Description contains unsafe or offensive content.';
-    } else {
-      // 2. FILE CHECK INDEPENDENTLY
-      if (newSubmission.file) {
+    try {
+      setBackendError('');
+
+      const createdAtMillis = Date.now();
+
+      const firestoreSubmission = {
+        title: newSubmission.title,
+        type: newSubmission.type,
+        category: newSubmission.category,
+        description: newSubmission.description,
+        fileName: newSubmission.fileName,
+        fileSize: newSubmission.fileSize,
+        dateSubmitted: getTodayDate(),
+        status: 'AI Auto-Check' as SubmissionStatus,
+        authorEmail: currentUser.email,
+        authorId: auth.currentUser?.uid || '',
+        isPublished: false,
+        verificationStage: 'AI Auto-Check',
+        aiCheckResult: 'Pending',
+        aiCategory: 'pending',
+        moderationReason: '',
+        heritageReviewNote: '',
+        createdAtMillis,
+        createdAt: serverTimestamp(),
+      };
+
+      const docRef = await addDoc(collection(db, 'submissions'), firestoreSubmission);
+
+      const savedSubmission: Submission = {
+        id: docRef.id,
+        ...firestoreSubmission,
+        source: 'Firestore',
+      };
+
+      setSubmissions((previousSubmissions) => [
+        savedSubmission,
+        ...previousSubmissions,
+      ]);
+
+      const { response: textResponse, data: textData } = await moderateText(
+        newSubmission.description || ''
+      );
+
+      if (!textResponse.ok || textData.status === 'error') {
+        throw new Error(textData.reason || 'Text moderation failed.');
+      }
+
+      let finalStatus: SubmissionStatus = 'AI Approved';
+      let aiCheckResult = 'Approved';
+      let aiCategory: SubmissionCategory = 'safe_and_relevant';
+      let moderationReason = '';
+
+      if (textData.status === 'flagged') {
+        finalStatus = 'Flagged';
+        aiCheckResult = 'Flagged';
+        aiCategory = textData.category || 'unsafe';
+        moderationReason =
+          textData.reason || 'Description flagged by AI moderation.';
+      } else if (newSubmission.file) {
         const { response: fileResponse, data: fileData } = await moderateFile(
           newSubmission.file
         );
@@ -568,48 +565,47 @@ const DashboardPage = () => {
             fileData.reason || 'File content flagged by AI moderation.';
         }
       }
-    }
 
-    await updateDoc(doc(db, 'submissions', docRef.id), {
-      status: finalStatus,
-      verificationStage: 'AI Auto-Check',
-      aiCheckResult,
-      aiCategory,
-      moderationReason,
-      heritageReviewNote: moderationReason,
-    });
+      await updateDoc(doc(db, 'submissions', docRef.id), {
+        status: finalStatus,
+        verificationStage: 'AI Auto-Check',
+        aiCheckResult,
+        aiCategory,
+        moderationReason,
+        heritageReviewNote: moderationReason,
+      });
 
-    await loadSubmissionsFromFirestore();
+      await loadSubmissionsFromFirestore();
 
-    setIsUploadOpen(false);
+      setIsUploadOpen(false);
 
-    if (finalStatus === 'Flagged') {
-      setSuccessMessage('');
+      if (finalStatus === 'Flagged') {
+        setSuccessMessage('');
 
-      if (aiCategory === 'irrelevant') {
-        setBackendError(
-          moderationReason
-            ? `Submission was marked as unrelated to Palestinian heritage: ${moderationReason}`
-            : 'Submission was marked as unrelated to Palestinian heritage.'
-        );
+        if (aiCategory === 'irrelevant') {
+          setBackendError(
+            moderationReason
+              ? `Submission was marked as unrelated to Palestinian heritage: ${moderationReason}`
+              : 'Submission was marked as unrelated to Palestinian heritage.'
+          );
+        } else {
+          setBackendError(
+            moderationReason
+              ? `Submission was flagged during AI moderation: ${moderationReason}`
+              : 'Submission was flagged during AI moderation.'
+          );
+        }
       } else {
-        setBackendError(
-          moderationReason
-            ? `Submission was flagged because the content is unsafe or offensive: ${moderationReason}`
-            : 'Submission was flagged because the content is unsafe or offensive.'
+        setBackendError('');
+        setSuccessMessage(
+          'Submission uploaded successfully and approved by AI moderation.'
         );
       }
-    } else {
-      setBackendError('');
-      setSuccessMessage(
-        'Submission uploaded successfully and approved by AI moderation.'
-      );
+    } catch (error: any) {
+      setBackendError(error.message || getReadableBackendError(error));
+      throw error;
     }
-  } catch (error: any) {
-    setBackendError(error.message || getReadableBackendError(error));
-    throw error;
-  }
-};
+  };
 
   if (!currentUser) {
     return (
