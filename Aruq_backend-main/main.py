@@ -16,6 +16,7 @@ app.add_middleware(
         "https://aruq-forked.vercel.app",
         "http://localhost:5173",
         "http://localhost:3000",
+        "https://aruq-palestinian-heritage.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
