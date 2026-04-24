@@ -82,7 +82,7 @@ type NewSubmissionInput = {
 
 const CURRENT_USER_KEY = 'aruqCurrentUser';
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
-const API_BASE = 'https://aruq-backend.onrender.com';
+const API_BASE = 'https://a-ruq-backend.onrender.com';
 
 const ALLOWED_FILE_EXTENSIONS = [
   'pdf',
