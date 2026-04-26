@@ -3,8 +3,6 @@
 A'ruq is a web-based Palestinian cultural heritage platform developed by **PiByte** for the **Software Engineering** course.  
 It helps users explore archive content, upload cultural materials, track submission progress, and support heritage-related causes.
 
-
-
 ## Features
 
 - User registration and login
@@ -36,7 +34,3 @@ It helps users explore archive content, upload cultural materials, track submiss
 - Render
 - Groq API
 
-
-Aruq_backend-main/
-  main.py
-  requirements.txt
