@@ -15,6 +15,7 @@ import {
   AlertCircle,
   ShieldCheck,
   RefreshCw,
+  XCircle,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
@@ -45,12 +46,7 @@ type SubmissionStatus =
   | 'Published'
   | 'Needs Revision';
 
-type SubmissionCategory =
-  | 'safe'
-  | 'unsafe'
-  | 'system_error'
-  | 'pending'
-  | '';
+type SubmissionCategory = 'safe' | 'unsafe' | 'system_error' | 'pending' | '';
 
 type Submission = {
   id: string;
@@ -122,15 +118,18 @@ const getTodayDate = () => {
 const getWorkflowStep = (status?: SubmissionStatus) => {
   if (!status) return 0;
 
-  if (
-    status === 'AI Auto-Check' ||
-    status === 'AI Approved' ||
-    status === 'Flagged'
-  ) {
+  if (status === 'AI Auto-Check' || status === 'Flagged') {
     return 2;
   }
 
-  if (status === 'Heritage Check' || status === 'Needs Revision') return 3;
+  if (
+    status === 'AI Approved' ||
+    status === 'Heritage Check' ||
+    status === 'Needs Revision'
+  ) {
+    return 3;
+  }
+
   if (status === 'Published') return 4;
 
   return 1;
@@ -138,23 +137,23 @@ const getWorkflowStep = (status?: SubmissionStatus) => {
 
 const getStatusDescription = (status: SubmissionStatus) => {
   if (status === 'AI Auto-Check') {
-    return 'The item has been uploaded and is waiting for automated review.';
+    return 'The item has been uploaded and is currently being checked by AI moderation.';
   }
 
   if (status === 'AI Approved') {
-    return 'The item passed automated review and is ready for the next verification stage.';
+    return 'The item passed AI moderation and is now ready for Heritage Partner review.';
   }
 
   if (status === 'Flagged') {
-    return 'The item was flagged during automated review and needs attention before continuing.';
+    return 'The item was flagged during AI moderation and cannot continue to Heritage Partner review until it is corrected.';
   }
 
   if (status === 'Heritage Check') {
-    return 'The item is waiting for cultural or historical review by a Heritage Partner.';
+    return 'The item passed AI moderation and is now waiting for cultural or historical review by a Heritage Partner.';
   }
 
   if (status === 'Needs Revision') {
-    return 'The item needs correction before it can continue through the verification workflow.';
+    return 'The item needs correction after review before it can continue through the verification workflow.';
   }
 
   return 'The item has completed the verification process and is ready for public archive publishing.';
@@ -277,39 +276,64 @@ const StatCard = ({
 const Step = ({
   number,
   title,
-  active,
+  completed,
   current,
+  failed,
 }: {
   number: string;
   title: string;
-  active?: boolean;
+  completed?: boolean;
   current?: boolean;
-}) => (
-  <div
-    className={`relative z-10 flex flex-col items-center gap-2 text-center ${
-      active || current ? 'opacity-100' : 'opacity-40'
-    }`}
-  >
-    <div
-      className={`
-        w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 transition-colors
-        ${current ? 'bg-white border-pal-red text-pal-red' : ''}
-        ${active && !current ? 'bg-pal-red border-pal-red text-white' : ''}
-        ${!active && !current ? 'bg-stone-200 border-stone-200 text-stone-500' : ''}
-      `}
-    >
-      {active && !current ? <CheckCircle className="w-5 h-5" /> : number}
-    </div>
+  failed?: boolean;
+}) => {
+  const isActive = completed || current || failed;
 
-    <span
-      className={`text-xs font-bold ${
-        current ? 'text-pal-red' : 'text-stone-500'
+  return (
+    <div
+      className={`relative z-10 flex flex-col items-center gap-2 text-center ${
+        isActive ? 'opacity-100' : 'opacity-40'
       }`}
     >
-      {title}
-    </span>
-  </div>
-);
+      <div
+        className={`
+          w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 transition-colors
+          ${failed ? 'bg-red-600 border-red-600 text-white' : ''}
+          ${completed && !failed ? 'bg-pal-red border-pal-red text-white' : ''}
+          ${
+            current && !completed && !failed
+              ? 'bg-white border-pal-red text-pal-red'
+              : ''
+          }
+          ${
+            !isActive
+              ? 'bg-stone-200 border-stone-200 text-stone-500'
+              : ''
+          }
+        `}
+      >
+        {failed ? (
+          <XCircle className="w-5 h-5" />
+        ) : completed ? (
+          <CheckCircle className="w-5 h-5" />
+        ) : (
+          number
+        )}
+      </div>
+
+      <span
+        className={`text-xs font-bold ${
+          failed
+            ? 'text-red-600'
+            : current || completed
+              ? 'text-pal-red'
+              : 'text-stone-500'
+        }`}
+      >
+        {title}
+      </span>
+    </div>
+  );
+};
 
 const StatusBadge = ({ status }: { status: SubmissionStatus }) => {
   const style =
@@ -369,9 +393,7 @@ const DashboardPage = () => {
         .map((document) =>
           convertFirestoreDocToSubmission(document.id, document.data())
         )
-        .sort(
-          (a, b) => (b.createdAtMillis || 0) - (a.createdAtMillis || 0)
-        );
+        .sort((a, b) => (b.createdAtMillis || 0) - (a.createdAtMillis || 0));
 
       setSubmissions(loadedSubmissions);
     } catch (error) {
@@ -407,6 +429,23 @@ const DashboardPage = () => {
 
   const latestSubmission = userSubmissions[0];
   const workflowStep = getWorkflowStep(latestSubmission?.status);
+
+  const aiCheckFailed = latestSubmission?.status === 'Flagged';
+  const heritageCheckFailed = latestSubmission?.status === 'Needs Revision';
+  const workflowFailed = aiCheckFailed || heritageCheckFailed;
+
+  const workflowProgressWidth =
+    workflowStep === 0
+      ? '0%'
+      : workflowStep === 1
+        ? '16%'
+        : workflowStep === 2
+          ? '33%'
+          : workflowStep === 3
+            ? '66%'
+            : workflowStep === 4
+              ? '100%'
+              : '0%';
 
   const handleSignOut = async () => {
     try {
@@ -511,7 +550,7 @@ const DashboardPage = () => {
         Description: ${newSubmission.description || ''}
       `;
 
-      let finalStatus: SubmissionStatus = 'AI Approved';
+      let finalStatus: SubmissionStatus = 'Heritage Check';
       let aiCheckResult = 'Approved';
       let aiCategory: SubmissionCategory = 'safe';
       let moderationReason = '';
@@ -551,7 +590,8 @@ const DashboardPage = () => {
 
         await updateDoc(doc(db, 'submissions', docRef.id), {
           status: finalStatus,
-          verificationStage: 'AI Auto-Check',
+          verificationStage:
+            finalStatus === 'Flagged' ? 'AI Auto-Check' : 'Heritage Check',
           aiCheckResult,
           aiCategory,
           moderationReason,
@@ -571,7 +611,7 @@ const DashboardPage = () => {
         } else {
           setBackendError('');
           setSuccessMessage(
-            'Submission uploaded successfully and approved by AI moderation.'
+            'Submission uploaded successfully, passed AI moderation, and moved to Heritage Partner review.'
           );
         }
       } catch (moderationError) {
@@ -824,55 +864,56 @@ const DashboardPage = () => {
                 <div className="absolute top-5 left-0 w-full h-1 bg-stone-100 z-0" />
 
                 <div
-                  className="absolute top-5 left-0 h-1 bg-pal-green/30 z-0"
-                  style={{
-                    width:
-                      workflowStep === 0
-                        ? '0%'
-                        : workflowStep === 1
-                          ? '16%'
-                          : workflowStep === 2
-                            ? '33%'
-                            : workflowStep === 3
-                              ? '66%'
-                              : workflowStep === 4
-                                ? '100%'
-                                : '0%',
-                  }}
+                  className={`absolute top-5 left-0 h-1 z-0 ${
+                    workflowFailed ? 'bg-red-200' : 'bg-pal-green/30'
+                  }`}
+                  style={{ width: workflowProgressWidth }}
                 />
 
                 <Step
                   number="1"
                   title="Submission"
-                  active={workflowStep > 1}
+                  completed={workflowStep > 1}
                   current={workflowStep === 1}
                 />
 
                 <Step
                   number="2"
                   title="AI Auto-Check"
-                  active={workflowStep > 2}
-                  current={workflowStep === 2}
+                  completed={workflowStep > 2 && !aiCheckFailed}
+                  current={workflowStep === 2 && !aiCheckFailed}
+                  failed={aiCheckFailed}
                 />
 
                 <Step
                   number="3"
                   title="Heritage Check"
-                  active={workflowStep > 3}
-                  current={workflowStep === 3}
+                  completed={workflowStep > 3 && !heritageCheckFailed}
+                  current={workflowStep === 3 && !heritageCheckFailed}
+                  failed={heritageCheckFailed}
                 />
 
                 <Step
                   number="4"
                   title="Published"
-                  current={workflowStep === 4}
+                  completed={workflowStep === 4}
                 />
               </div>
 
               {latestSubmission && (
-                <div className="mt-6 bg-gradient-to-r from-stone-50 to-stone-100 border border-stone-200 rounded-xl p-4">
+                <div
+                  className={`mt-6 rounded-xl p-4 border ${
+                    workflowFailed
+                      ? 'bg-red-50 border-red-200'
+                      : 'bg-gradient-to-r from-stone-50 to-stone-100 border-stone-200'
+                  }`}
+                >
                   <div className="flex items-start gap-2">
-                    <ShieldCheck className="w-5 h-5 text-pal-green shrink-0 mt-0.5" />
+                    {workflowFailed ? (
+                      <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                    ) : (
+                      <ShieldCheck className="w-5 h-5 text-pal-green shrink-0 mt-0.5" />
+                    )}
 
                     <div>
                       <p className="text-sm font-semibold text-stone-900">
@@ -1352,7 +1393,14 @@ const SubmissionDetailsModal = ({
             </p>
           </div>
 
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <div
+            className={`rounded-xl p-4 border ${
+              submission.status === 'Flagged' ||
+              submission.status === 'Needs Revision'
+                ? 'bg-red-50 border-red-200'
+                : 'bg-green-50 border-green-200'
+            }`}
+          >
             <h4 className="font-semibold text-stone-800 mb-2">
               Current Workflow Meaning
             </h4>
