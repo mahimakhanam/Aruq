@@ -1,11 +1,42 @@
+# A'ruq - عروق
 
-  # A'ruq Phase 3
+A'ruq is a web-based Palestinian cultural heritage platform developed by **PiByte** for the **Software Engineering** course.  
+It helps users explore archive content, upload cultural materials, track submission progress, and support heritage-related causes.
 
-  This is a code bundle for A'ruq Phase 3. The original project is available at https://www.figma.com/design/mu0S9TAk7v9zq5BjH2K3hF/A-ruq-Phase-3.
 
-  ## Running the code
 
-  Run `npm i` to install the dependencies.
+## Features
 
-  Run `npm run dev` to start the development server.
-  
+- User registration and login
+- Protected contributor dashboard
+- Upload form with validation
+- Submission tracking and workflow status
+- Archive search and filtering
+- Content details view
+- AI moderation for text, images, and PDF files
+- Firebase Authentication and Firestore integration
+- Donation page redirect
+
+## Tech Stack
+
+### Frontend
+- React
+- TypeScript
+- Tailwind CSS
+- Vite
+
+### Backend
+- Python
+- FastAPI
+- Uvicorn
+
+### Services
+- Firebase Authentication
+- Firestore
+- Render
+- Groq API
+
+
+Aruq_backend-main/
+  main.py
+  requirements.txt
